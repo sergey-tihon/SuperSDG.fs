@@ -1,31 +1,10 @@
 open System
-open Microsoft.FSharp.NativeInterop
 open Silk.NET.Input
 open Silk.NET.Maths
 open Silk.NET.OpenGL
 open Silk.NET.Windowing
-
+open SuperSDG.Core
 #nowarn "9"
-
-//Vertex shaders are run on each vertex.
-let VertexShaderSource = @"
-#version 330 core //Using version GLSL version 3.3
-layout (location = 0) in vec4 vPos;
-
-void main()
-{
-    gl_Position = vec4(vPos.x, vPos.y, vPos.z, 1.0);
-}"
-
-//Fragment shaders are run on each fragment/pixel of the geometry.
-let FragmentShaderSource = @"
-#version 330 core
-out vec4 FragColor;
-
-void main()
-{
-    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-}"
 
 //Vertex data, uploaded to the VBO.
 let Vertices = [|
@@ -39,16 +18,14 @@ let Vertices = [|
 //Index data, uploaded to the EBO.
 let Indices =
     [|
-        0; 1; 3;
-        1; 2; 3
+        0u; 1u; 3u;
+        1u; 2u; 3u
     |]
-    |> Array.map (uint)
 
-let mutable Gl: GL = null
-let mutable Vbo = Unchecked.defaultof<_>
-let mutable Ebo = Unchecked.defaultof<_>
+let mutable Gl = Unchecked.defaultof<_>
 let mutable Vao = Unchecked.defaultof<_>
 let mutable Shader = Unchecked.defaultof<_>
+let disposables = Collections.Generic.List<IDisposable>();
 
 let mutable options = WindowOptions.Default
 options.Size <- Vector2D<int>(800, 600)
@@ -63,82 +40,26 @@ window.add_Load(fun _ ->
         )
         
     Gl <- GL.GetApi(window)
-    
-    Vao <- Gl.GenVertexArray()
-    Gl.BindVertexArray(Vao)
-    
-    //Initializing a vertex buffer that holds the vertex data.
-    do 
-        Vbo <- Gl.GenBuffer()
-        Gl.BindBuffer(BufferTargetARB.ArrayBuffer, Vbo)
-        use floatPtr = fixed Vertices
-        Gl.BufferData(
-            BufferTargetARB.ArrayBuffer,
-            unativeint <| (Vertices.Length * sizeof<uint>),
-            NativePtr.toVoidPtr floatPtr,
-            BufferUsageARB.StaticDraw
-        )
         
-    //Initializing a element buffer that holds the index data.
-    do 
-        Ebo <- Gl.GenBuffer()
-        Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, Ebo)
-        use intPtr = fixed Indices
-        Gl.BufferData(
-            BufferTargetARB.ElementArrayBuffer,
-            unativeint <| (Indices.Length * sizeof<uint>),
-            NativePtr.toVoidPtr intPtr,
-            BufferUsageARB.StaticDraw
-        )
-        
-    //Creating a vertex shader.
-    let vertexShader = Gl.CreateShader(ShaderType.VertexShader)
-    Gl.ShaderSource(vertexShader, VertexShaderSource)
-    Gl.CompileShader(vertexShader)
-
-    //Checking the shader for compilation errors.
-    let infoLog = Gl.GetShaderInfoLog(vertexShader);
-    if not <| String.IsNullOrWhiteSpace(infoLog)
-    then printfn $"Error compiling vertex shader {infoLog}"
+    //Instantiating our new abstractions
+    let Vbo = new BufferObject<float32>(Gl, Vertices, BufferTargetARB.ArrayBuffer)
+    let Ebo = new BufferObject<uint>(Gl, Indices, BufferTargetARB.ElementArrayBuffer)
+    Vao <- new VertexArrayObject<float32, uint>(Gl, Vbo, Ebo)
+    disposables.AddRange([Vbo; Ebo; Vao])
             
-    //Creating a fragment shader.
-    let fragmentShader = Gl.CreateShader(ShaderType.FragmentShader)
-    Gl.ShaderSource(fragmentShader, FragmentShaderSource)
-    Gl.CompileShader(fragmentShader)
+    //Telling the VAO object how to lay out the attribute pointers
+    Vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 7u, 0)
+    Vao.VertexAttributePointer(1u, 4, VertexAttribPointerType.Float, 7u, 3) 
 
-    //Checking the shader for compilation errors.
-    let infoLog = Gl.GetShaderInfoLog(fragmentShader);
-    if not <| String.IsNullOrWhiteSpace(infoLog)
-    then printfn $"Error compiling fragment shader {infoLog}"
-            
-    //Combining the shaders under one shader program.
-    Shader <- Gl.CreateProgram()
-    Gl.AttachShader(Shader, vertexShader)
-    Gl.AttachShader(Shader, fragmentShader)
-    Gl.LinkProgram(Shader)
-
-    //Checking the linking for errors.
-    let status = Gl.GetProgram(Shader, GLEnum.LinkStatus)
-    if status = 0
-    then printfn $"Error linking shader {Gl.GetProgramInfoLog(Shader)}"
-            
-
-    //Delete the no longer useful individual shaders;
-    Gl.DetachShader(Shader, vertexShader)
-    Gl.DetachShader(Shader, fragmentShader)
-    Gl.DeleteShader(vertexShader)
-    Gl.DeleteShader(fragmentShader)
-
-    //Tell opengl how to give the data to the shaders.
-    Gl.VertexAttribPointer(uint 0, 3, VertexAttribPointerType.Float, false, uint <| (3 * sizeof<float32>),
-                           IntPtr.Zero.ToPointer())
-    Gl.EnableVertexAttribArray(uint 0)
+    Shader <- new Shader(Gl, "Shader.vert", "Shader.frag")
+    disposables.Add(Shader)
 )
 window.add_Render(fun _ ->
     Gl.Clear(uint <| ClearBufferMask.ColorBufferBit)
     
-    Gl.BindVertexArray(Vao)
-    Gl.UseProgram(Shader)
+    Vao.Bind()
+    Shader.Use()
+    Shader.SetUniform("uBlue", float32 <| Math.Sin(float(DateTime.Now.Millisecond) / 1000. * Math.PI))
     
     Gl.DrawElements(
         PrimitiveType.Triangles,
@@ -148,11 +69,10 @@ window.add_Render(fun _ ->
 )
 
 window.add_Update(fun _ -> ())
+
 window.add_Closing(fun _ ->
-    Gl.DeleteBuffer(Vbo)
-    Gl.DeleteBuffer(Ebo)
-    Gl.DeleteVertexArray(Vao)
-    Gl.DeleteProgram(Shader)
+    for x in disposables do
+        x.Dispose()
 )
 
 window.Run();

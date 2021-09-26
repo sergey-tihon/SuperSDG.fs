@@ -6,6 +6,13 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <Content Include="Shader.frag">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Shader.vert">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Compile Include="Core.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

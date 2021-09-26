@@ -8,11 +8,11 @@ open SuperSDG.Core
 
 //Vertex data, uploaded to the VBO.
 let Vertices = [|
-     //X    Y      Z
-     0.5f;  0.5f; 0.0f;
-     0.5f; -0.5f; 0.0f;
-    -0.5f; -0.5f; 0.0f;
-    -0.5f;  0.5f; 0.5f
+    //X    Y      Z     U   V
+     0.5f;  0.5f; 0.0f; 1f; 1f;
+     0.5f; -0.5f; 0.0f; 1f; 0f;
+    -0.5f; -0.5f; 0.0f; 0f; 0f;
+    -0.5f;  0.5f; 0.5f; 0f; 1f
 |]
 
 //Index data, uploaded to the EBO.
@@ -25,6 +25,7 @@ let Indices =
 let mutable Gl = Unchecked.defaultof<_>
 let mutable Vao = Unchecked.defaultof<_>
 let mutable Shader = Unchecked.defaultof<_>
+let mutable Texture = Unchecked.defaultof<_>
 let disposables = Collections.Generic.List<IDisposable>();
 
 let mutable options = WindowOptions.Default
@@ -38,7 +39,6 @@ window.add_Load(fun _ ->
         keyboard.add_KeyDown(fun keyboard key _ ->
             if key = Key.Escape then window.Close()
         )
-        
     Gl <- GL.GetApi(window)
         
     //Instantiating our new abstractions
@@ -48,18 +48,21 @@ window.add_Load(fun _ ->
     disposables.AddRange([Vbo; Ebo; Vao])
             
     //Telling the VAO object how to lay out the attribute pointers
-    Vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 7u, 0)
-    Vao.VertexAttributePointer(1u, 4, VertexAttribPointerType.Float, 7u, 3) 
+    Vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+    Vao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3) 
 
-    Shader <- new Shader(Gl, "Shader.vert", "Shader.frag")
-    disposables.Add(Shader)
+    Shader <- new Shader(Gl, "Resources/Shader.vert", "Resources/Shader.frag")
+    Texture <- new Texture(Gl, "Resources/floor.jpeg");
+    disposables.AddRange([Shader; Texture])
 )
 window.add_Render(fun _ ->
     Gl.Clear(uint <| ClearBufferMask.ColorBufferBit)
     
     Vao.Bind()
     Shader.Use()
-    Shader.SetUniform("uBlue", float32 <| Math.Sin(float(DateTime.Now.Millisecond) / 1000. * Math.PI))
+    Texture.Bind(TextureUnit.Texture0)
+    Shader.SetUniform("uTexture0", 0f)
+    //Shader.SetUniform("uBlue", float32 <| Math.Sin(float(DateTime.Now.Millisecond) / 1000. * Math.PI))
     
     Gl.DrawElements(
         PrimitiveType.Triangles,
@@ -67,8 +70,6 @@ window.add_Render(fun _ ->
         DrawElementsType.UnsignedInt,
         IntPtr.Zero.ToPointer())
 )
-
-window.add_Update(fun _ -> ())
 
 window.add_Closing(fun _ ->
     for x in disposables do

@@ -6,10 +6,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Shader.frag">
+        <Content Include="Resources\Shader.frag">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Content Include="Shader.vert">
+        <Content Include="Resources\Shader.vert">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Resources\floor.jpeg">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Include="Resources\wall.jpeg">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
         <Compile Include="Core.fs" />
@@ -20,6 +26,7 @@
       <PackageReference Include="Silk.NET.Input" Version="2.8.0" />
       <PackageReference Include="Silk.NET.OpenGL" Version="2.8.0" />
       <PackageReference Include="Silk.NET.Windowing" Version="2.8.0" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="1.0.3" />
     </ItemGroup>
 
 </Project>

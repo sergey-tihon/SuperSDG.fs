@@ -50,7 +50,7 @@ let Vertices = [|
      0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
      0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
     -0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
--0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f
+    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f
 |]
 let Indices = [|
     0u; 1u; 3u;
@@ -145,6 +145,7 @@ window.add_Load(fun _ ->
         lightingShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
         lightingShader.SetUniform("lightColor", Vector3.One)
         lightingShader.SetUniform("lightPos", lampPosition)
+        lightingShader.SetUniform("viewPos", camera.Position)
         
         //We're drawing with just vertices and no indicies, and it takes 36 verticies to have a six-sided textured cube
         gl.DrawArrays(PrimitiveType.Triangles, 0, 36u)

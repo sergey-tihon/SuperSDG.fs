@@ -1,4 +1,5 @@
 open System
+open System.Numerics
 open Silk.NET.Input
 open Silk.NET.Maths
 open Silk.NET.OpenGL
@@ -6,7 +7,6 @@ open Silk.NET.Windowing
 open SuperSDG.Core
 #nowarn "9"
 
-//Vertex data, uploaded to the VBO.
 let Vertices = [|
     //X    Y      Z     U   V
      0.5f;  0.5f; 0.0f; 1f; 1f;
@@ -14,19 +14,10 @@ let Vertices = [|
     -0.5f; -0.5f; 0.0f; 0f; 0f;
     -0.5f;  0.5f; 0.5f; 0f; 1f
 |]
-
-//Index data, uploaded to the EBO.
-let Indices =
-    [|
-        0u; 1u; 3u;
-        1u; 2u; 3u
-    |]
-
-let mutable Gl = Unchecked.defaultof<_>
-let mutable Vao = Unchecked.defaultof<_>
-let mutable Shader = Unchecked.defaultof<_>
-let mutable Texture = Unchecked.defaultof<_>
-let disposables = Collections.Generic.List<IDisposable>();
+let Indices = [|
+    0u; 1u; 3u;
+    1u; 2u; 3u
+|]
 
 let mutable options = WindowOptions.Default
 options.Size <- Vector2D<int>(800, 600)
@@ -39,41 +30,54 @@ window.add_Load(fun _ ->
         keyboard.add_KeyDown(fun keyboard key _ ->
             if key = Key.Escape then window.Close()
         )
-    Gl <- GL.GetApi(window)
-        
+    let gl = GL.GetApi(window)
+    let disposables = Collections.Generic.List<IDisposable>()
+    
     //Instantiating our new abstractions
-    let Vbo = new BufferObject<float32>(Gl, Vertices, BufferTargetARB.ArrayBuffer)
-    let Ebo = new BufferObject<uint>(Gl, Indices, BufferTargetARB.ElementArrayBuffer)
-    Vao <- new VertexArrayObject<float32, uint>(Gl, Vbo, Ebo)
-    disposables.AddRange([Vbo; Ebo; Vao])
+    let vbo = new BufferObject<float32>(gl, Vertices, BufferTargetARB.ArrayBuffer)
+    let ebo = new BufferObject<uint>(gl, Indices, BufferTargetARB.ElementArrayBuffer)
+    let vao = new VertexArrayObject<float32, uint>(gl, vbo, ebo)
+    disposables.AddRange([vbo; ebo; vao])
             
     //Telling the VAO object how to lay out the attribute pointers
-    Vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
-    Vao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3) 
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+    vao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3) 
 
-    Shader <- new Shader(Gl, "Resources/Shader.vert", "Resources/Shader.frag")
-    Texture <- new Texture(Gl, "Resources/floor.jpeg");
-    disposables.AddRange([Shader; Texture])
-)
-window.add_Render(fun _ ->
-    Gl.Clear(uint <| ClearBufferMask.ColorBufferBit)
+    let shader = new Shader(gl, "Resources/Shader.vert", "Resources/Shader.frag")
+    let texture = new Texture(gl, "Resources/floor.jpeg");
+    disposables.AddRange([shader; texture])
     
-    Vao.Bind()
-    Shader.Use()
-    Texture.Bind(TextureUnit.Texture0)
-    Shader.SetUniform("uTexture0", 0f)
-    //Shader.SetUniform("uBlue", float32 <| Math.Sin(float(DateTime.Now.Millisecond) / 1000. * Math.PI))
+    let transforms = [|
+        { Transform.Identity with Position = Vector3(0.5f, 0.5f, 0f) }
+        { Transform.Identity with Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 1f) }
+        { Transform.Identity with Scale = 0.5f}
+        { Transform.Identity with
+           Position = Vector3(-0.5f, 0.5f, 0f)
+           Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 1f)
+           Scale = 0.5f}
+    |]
     
-    Gl.DrawElements(
-        PrimitiveType.Triangles,
-        uint <| Indices.Length,
-        DrawElementsType.UnsignedInt,
-        IntPtr.Zero.ToPointer())
-)
+    window.add_Render(fun _ ->
+        gl.Clear(uint <| ClearBufferMask.ColorBufferBit)
+        
+        vao.Bind()
+        shader.Use()
+        texture.Bind(TextureUnit.Texture0)
+        shader.SetUniform("uTexture0", 0f)
 
-window.add_Closing(fun _ ->
-    for x in disposables do
-        x.Dispose()
+        for t in transforms do
+            shader.SetUniform("uModel", t.ViewMatrix)
+            gl.DrawElements(
+                PrimitiveType.Triangles,
+                uint <| Indices.Length,
+                DrawElementsType.UnsignedInt,
+                IntPtr.Zero.ToPointer())
+    )
+
+    window.add_Closing(fun _ ->
+        for x in disposables do
+            x.Dispose()
+    )
 )
 
 window.Run();

@@ -2,12 +2,13 @@ namespace SuperSDG.Core
 
 open System
 open System.IO
+open System.Numerics;
 open System.Runtime.CompilerServices
+open System.Runtime.InteropServices
 open Microsoft.FSharp.NativeInterop
 open Silk.NET.OpenGL
 open SixLabors.ImageSharp
 open SixLabors.ImageSharp.PixelFormats
-open System.Runtime.InteropServices
 open SixLabors.ImageSharp.Processing
 
 #nowarn "9"
@@ -67,7 +68,11 @@ type Shader(gl:GL, vertexPath, fragmentPath) =
         let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
         gl.Uniform1(location, value)
-        
+    member _.SetUniform(name:string, value:Matrix4x4) =
+        let location = gl.GetUniformLocation(handle, name);
+        if location = -1 then failwith $"{name} uniform not found on shader."
+        gl.UniformMatrix4(location, 1u, false, &value.M11) // :(
+
     interface IDisposable with
         member this.Dispose() = gl.DeleteProgram(handle)
 
@@ -98,3 +103,20 @@ type Texture(gl:GL, path: string) as self =
     interface IDisposable with
         member this.Dispose() = gl.DeleteTexture(handle);
     
+type Transform =
+    {
+        Position : Vector3
+        Scale : float32
+        Rotation: Quaternion
+    }
+    static member Identity =
+        {
+            Position = Vector3(0f, 0f, 0f)
+            Scale = 1f
+            Rotation = Quaternion.Identity
+        }
+    member this.ViewMatrix with get () =
+        Matrix4x4.Identity
+            * Matrix4x4.CreateFromQuaternion(this.Rotation)
+            * Matrix4x4.CreateScale(this.Scale)
+            * Matrix4x4.CreateTranslation(this.Position)

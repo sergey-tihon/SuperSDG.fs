@@ -3,8 +3,6 @@ namespace SuperSDG.Core
 open System
 open System.IO
 open System.Numerics;
-open System.Runtime.CompilerServices
-open System.Runtime.InteropServices
 open Microsoft.FSharp.NativeInterop
 open Silk.NET.OpenGL
 open SixLabors.ImageSharp

@@ -9,48 +9,48 @@ open SuperSDG.Core
 
 let Width, Height = (800, 600)
 let Vertices = [|
-    //X    Y      Z       Normals
-    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-     0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-     0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-     0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
+    //X    Y      Z       Normals             U     V
+    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 0.0f; 0.0f;
+     0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 1.0f; 0.0f;
+     0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 1.0f; 1.0f;
+     0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 1.0f; 1.0f;
+    -0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 0.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 0.0f; 0.0f;
 
-    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-     0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-    -0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 0.0f; 0.0f;
+     0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 1.0f; 0.0f;
+     0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 1.0f; 1.0f;
+     0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 1.0f; 1.0f;
+    -0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 0.0f; 1.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 0.0f; 0.0f;
 
-    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f;
-    -0.5f;  0.5f; -0.5f; -1.0f;  0.0f;  0.0f;
-    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f;
-    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f;
-    -0.5f; -0.5f;  0.5f; -1.0f;  0.0f;  0.0f;
-    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f;
+    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f; 0.0f; 0.0f;
+    -0.5f;  0.5f; -0.5f; -1.0f;  0.0f;  0.0f; 1.0f; 0.0f;
+    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f; 1.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f; 1.0f; 1.0f;
+    -0.5f; -0.5f;  0.5f; -1.0f;  0.0f;  0.0f; 0.0f; 1.0f;
+    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f; 0.0f; 0.0f;
 
-     0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f;  0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f; -0.5f;  0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f;
+     0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f; 0.0f; 0.0f;
+     0.5f;  0.5f; -0.5f;  1.0f;  0.0f;  0.0f; 1.0f; 0.0f;
+     0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f; 1.0f; 1.0f;
+     0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f; 1.0f; 1.0f;
+     0.5f; -0.5f;  0.5f;  1.0f;  0.0f;  0.0f; 0.0f; 1.0f;
+     0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f; 0.0f; 0.0f;
 
-    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f;
-     0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f;
-     0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f;
-     0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f; 0.0f; 0.0f;
+     0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f; 1.0f; 0.0f;
+     0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f; 1.0f; 1.0f;
+     0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f; 1.0f; 1.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f; 0.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f; 0.0f; 0.0f;
 
-    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f;
-     0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
-    -0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f
+    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f; 0.0f; 0.0f;
+     0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f; 1.0f; 0.0f;
+     0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f; 1.0f; 1.0f;
+     0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f; 1.0f; 1.0f;
+    -0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f; 0.0f; 1.0f;
+    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f; 0.0f; 0.0f
 |]
 let Indices = [|
     0u; 1u; 3u;
@@ -107,17 +107,19 @@ window.add_Load(fun _ ->
     let VaoCube = new VertexArrayObject<float32, uint>(gl, vbo, ebo)
     disposables.AddRange([vbo; ebo; VaoCube])
             
-    VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
-    VaoCube.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 6u, 3)
+    VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
+    VaoCube.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
+    VaoCube.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
     
     //The lighting shader will give our main cube it's colour multiplied by the lights intensity
     let lightingShader = new Shader(gl, "Resources/shader.vert", "Resources/lighting.frag")
     //The Lamp shader uses a fragment shader that just colours it solid white so that we know it is the light source
     let lampShader = new Shader(gl, "Resources/shader.vert", "Resources/shader.frag")
-    let lampPosition = new Vector3(1.2f, 1.0f, 2.0f)
+    let lampPosition = Vector3(1.2f, 1.0f, 2.0f)
 
-    let texture = new Texture(gl, "Resources/floor.jpeg")
-    disposables.AddRange([lightingShader; lampShader; texture])
+    let diffuseMap = new Texture(gl, "Resources/floor.jpeg")
+    let specularMap = new Texture(gl, "Resources/wall.jpeg");
+    disposables.AddRange([lightingShader; lampShader; diffuseMap; specularMap])
     
     window.add_Update(fun deltaTime ->
         let moveSpeed = 2.5f * (float32 deltaTime)
@@ -140,25 +142,26 @@ window.add_Load(fun _ ->
         
         //Use the 'lighting shader' that is capable of modifying the cubes colours based on ambient lighting and diffuse lighting
         lightingShader.Use()
-        //Slightly rotate the cube to give it an angled face to look at
-        lightingShader.SetUniform("uModel", Matrix4x4.CreateRotationY(MathHelper.degreesToRadians(25f)))
-        lightingShader.SetUniform("uView", camera.GetViewMatrix())
-        lightingShader.SetUniform("uProjection", camera.GetProjectionMatrix())
-        lightingShader.SetUniform("viewPos", camera.Position)
-        lightingShader.SetUniform("material.ambient", Vector3(1.0f, 0.5f, 0.31f))
-        lightingShader.SetUniform("material.diffuse", Vector3(1.0f, 0.5f, 0.31f))
-        lightingShader.SetUniform("material.specular", Vector3(0.5f, 0.5f, 0.5f))
+        //Bind the diffuse map and and set to use texture0.
+        diffuseMap.Bind(TextureUnit.Texture0);
+        //Bind the diffuse map and and set to use texture1.
+        specularMap.Bind(TextureUnit.Texture1);
+
+        //Setup the coordinate systems for our view
+        lightingShader.SetUniform("uModel", Matrix4x4.Identity);
+        lightingShader.SetUniform("uView", camera.GetViewMatrix());
+        lightingShader.SetUniform("uProjection", camera.GetProjectionMatrix());
+        //Let the shaders know where the Camera is looking from
+        lightingShader.SetUniform("viewPos", camera.Position);
+        //Configure the materials variables.
+        //Diffuse is set to 0 because our diffuseMap is bound to Texture0
+        lightingShader.SetUniform("material.diffuse", 0)
+        //Specular is set to 1 because our diffuseMap is bound to Texture1
+        lightingShader.SetUniform("material.specular", 1)
         lightingShader.SetUniform("material.shininess", 32.0f)
-        
-        //Track the difference in time so we can manipulate variables as time changes
-        let difference = float32 <| (DateTime.UtcNow - startTime).TotalSeconds;
-        let lightColor = Vector3(
-            MathF.Sin(difference * 2.0f),
-            MathF.Sin(difference * 0.7f),
-            MathF.Sin(difference * 1.3f)
-        )
-        let diffuseColor = lightColor * Vector3(0.5f);
-        let ambientColor = diffuseColor * Vector3(0.2f);
+
+        let diffuseColor = Vector3(0.5f)
+        let ambientColor = diffuseColor * Vector3(0.2f)
 
         lightingShader.SetUniform("light.ambient", ambientColor)
         lightingShader.SetUniform("light.diffuse", diffuseColor) // darkened

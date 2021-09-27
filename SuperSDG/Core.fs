@@ -74,6 +74,10 @@ type Shader(gl:GL, vertexPath, fragmentPath) =
         let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
         gl.Uniform3(location, value.X, value.Y, value.Z)
+    member _.SetUniform(name:string, value:int) =
+        let location = gl.GetUniformLocation(handle, name)
+        if location = -1 then failwith $"{name} uniform not found on shader."
+        gl.Uniform1(location, value)
     interface IDisposable with
         member this.Dispose() = gl.DeleteProgram(handle)
 

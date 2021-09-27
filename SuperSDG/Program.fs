@@ -63,6 +63,8 @@ options.Title <- "SuperSDG v3"
 
 let window = Window.Create options
 window.add_Load(fun _ ->
+    let startTime = DateTime.UtcNow
+    
     let input = window.CreateInput()
     let primaryKeyboard = input.Keyboards.Item(0)
     for keyboard in input.Keyboards do
@@ -138,15 +140,31 @@ window.add_Load(fun _ ->
         
         //Use the 'lighting shader' that is capable of modifying the cubes colours based on ambient lighting and diffuse lighting
         lightingShader.Use()
-        //Set up the uniforms needed for the lighting shaders to be able to draw and light the coral cube
+        //Slightly rotate the cube to give it an angled face to look at
         lightingShader.SetUniform("uModel", Matrix4x4.CreateRotationY(MathHelper.degreesToRadians(25f)))
         lightingShader.SetUniform("uView", camera.GetViewMatrix())
         lightingShader.SetUniform("uProjection", camera.GetProjectionMatrix())
-        lightingShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
-        lightingShader.SetUniform("lightColor", Vector3.One)
-        lightingShader.SetUniform("lightPos", lampPosition)
         lightingShader.SetUniform("viewPos", camera.Position)
+        lightingShader.SetUniform("material.ambient", Vector3(1.0f, 0.5f, 0.31f))
+        lightingShader.SetUniform("material.diffuse", Vector3(1.0f, 0.5f, 0.31f))
+        lightingShader.SetUniform("material.specular", Vector3(0.5f, 0.5f, 0.5f))
+        lightingShader.SetUniform("material.shininess", 32.0f)
         
+        //Track the difference in time so we can manipulate variables as time changes
+        let difference = float32 <| (DateTime.UtcNow - startTime).TotalSeconds;
+        let lightColor = Vector3(
+            MathF.Sin(difference * 2.0f),
+            MathF.Sin(difference * 0.7f),
+            MathF.Sin(difference * 1.3f)
+        )
+        let diffuseColor = lightColor * Vector3(0.5f);
+        let ambientColor = diffuseColor * Vector3(0.2f);
+
+        lightingShader.SetUniform("light.ambient", ambientColor)
+        lightingShader.SetUniform("light.diffuse", diffuseColor) // darkened
+        lightingShader.SetUniform("light.specular", Vector3(1.0f, 1.0f, 1.0f))
+        lightingShader.SetUniform("light.position", lampPosition)
+
         //We're drawing with just vertices and no indicies, and it takes 36 verticies to have a six-sided textured cube
         gl.DrawArrays(PrimitiveType.Triangles, 0, 36u)
         

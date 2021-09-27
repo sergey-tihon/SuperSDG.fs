@@ -85,12 +85,12 @@ type Texture(gl:GL, path: string) as self =
 
     member this.Load(gl:GL, data: voidptr, width:uint, height:uint) =
         this.Bind()
-        gl.TexImage2D(TextureTarget.Texture2D, 0, (int) InternalFormat.Rgba, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+        gl.TexImage2D(TextureTarget.Texture2D, 0, int InternalFormat.Rgba, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
         //Setting some texture parameters so the texture behaves as expected.
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) GLEnum.Repeat);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) GLEnum.Repeat);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int) GLEnum.Linear);
-        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int) GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, int GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, int GLEnum.ClampToEdge);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, int GLEnum.Linear);
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, int GLEnum.Linear);
         //Generating mipmaps.
         gl.GenerateMipmap(TextureTarget.Texture2D);
 
@@ -120,3 +120,7 @@ type Transform =
             * Matrix4x4.CreateFromQuaternion(this.Rotation)
             * Matrix4x4.CreateScale(this.Scale)
             * Matrix4x4.CreateTranslation(this.Position)
+
+module MathHelper =
+    let degreesToRadians degrees =
+        MathF.PI / 180f * degrees

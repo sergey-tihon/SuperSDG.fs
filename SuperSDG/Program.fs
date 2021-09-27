@@ -7,12 +7,57 @@ open Silk.NET.Windowing
 open SuperSDG.Core
 #nowarn "9"
 
+let Width, Height = (800, 600)
+//Setup the camera's location, and relative up and right directions
+let CameraPosition = Vector3(0.0f, 0.0f, 3.0f)
+let CameraTarget = Vector3.Zero
+let CameraDirection = Vector3.Normalize(CameraPosition - CameraTarget)
+let CameraRight = Vector3.Normalize(Vector3.Cross(Vector3.UnitY, CameraDirection))
+let CameraUp = Vector3.Cross(CameraDirection, CameraRight)
+
 let Vertices = [|
     //X    Y      Z     U   V
-     0.5f;  0.5f; 0.0f; 1f; 1f;
-     0.5f; -0.5f; 0.0f; 1f; 0f;
-    -0.5f; -0.5f; 0.0f; 0f; 0f;
-    -0.5f;  0.5f; 0.5f; 0f; 1f
+    -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
+     0.5f; -0.5f; -0.5f;  1.0f; 0.0f;
+     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+    -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
+
+    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+     0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
+     0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
+     0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
+    -0.5f;  0.5f;  0.5f;  0.0f; 1.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+
+    -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+    -0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+    -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+
+     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+     0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+     0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+     0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+
+    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+     0.5f; -0.5f; -0.5f;  1.0f; 1.0f;
+     0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
+     0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+
+    -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
+     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+    -0.5f;  0.5f;  0.5f;  0.0f; 0.0f;
+    -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
 |]
 let Indices = [|
     0u; 1u; 3u;
@@ -20,7 +65,7 @@ let Indices = [|
 |]
 
 let mutable options = WindowOptions.Default
-options.Size <- Vector2D<int>(800, 600)
+options.Size <- Vector2D<int>(Width, Height)
 options.Title <- "SuperSDG v3"
 
 let window = Window.Create options
@@ -47,31 +92,29 @@ window.add_Load(fun _ ->
     let texture = new Texture(gl, "Resources/floor.jpeg");
     disposables.AddRange([shader; texture])
     
-    let transforms = [|
-        { Transform.Identity with Position = Vector3(0.5f, 0.5f, 0f) }
-        { Transform.Identity with Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 1f) }
-        { Transform.Identity with Scale = 0.5f}
-        { Transform.Identity with
-           Position = Vector3(-0.5f, 0.5f, 0f)
-           Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, 1f)
-           Scale = 0.5f}
-    |]
-    
     window.add_Render(fun _ ->
-        gl.Clear(uint <| ClearBufferMask.ColorBufferBit)
+        gl.Enable(EnableCap.DepthTest)
+        gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit);
         
         vao.Bind()
+        texture.Bind()
         shader.Use()
-        texture.Bind(TextureUnit.Texture0)
         shader.SetUniform("uTexture0", 0f)
 
-        for t in transforms do
-            shader.SetUniform("uModel", t.ViewMatrix)
-            gl.DrawElements(
-                PrimitiveType.Triangles,
-                uint <| Indices.Length,
-                DrawElementsType.UnsignedInt,
-                IntPtr.Zero.ToPointer())
+        //Use elapsed time to convert to radians to allow our cube to rotate over time
+        let difference = float32 <| (window.Time * 100.)
+
+        let model = Matrix4x4.CreateRotationY(MathHelper.degreesToRadians difference)
+                        * Matrix4x4.CreateRotationX(MathHelper.degreesToRadians difference);
+        let view = Matrix4x4.CreateLookAt(CameraPosition, CameraTarget, CameraUp)
+        let projection = Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.degreesToRadians 45.0f, float32 Width / float32 Height, 0.1f, 100.0f);
+
+        shader.SetUniform("uModel", model)
+        shader.SetUniform("uView", view)
+        shader.SetUniform("uProjection", projection)
+
+        //We're drawing with just vertices and no indicies, and it takes 36 verticies to have a six-sided textured cube
+        gl.DrawArrays(PrimitiveType.Triangles, 0, 36u);
     )
 
     window.add_Closing(fun _ ->

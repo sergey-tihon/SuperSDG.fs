@@ -67,10 +67,13 @@ type Shader(gl:GL, vertexPath, fragmentPath) =
         if location = -1 then failwith $"{name} uniform not found on shader."
         gl.Uniform1(location, value)
     member _.SetUniform(name:string, value:Matrix4x4) =
-        let location = gl.GetUniformLocation(handle, name);
+        let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
         gl.UniformMatrix4(location, 1u, false, &value.M11) // :(
-
+    member _.SetUniform(name:string, value:Vector3) =
+        let location = gl.GetUniformLocation(handle, name)
+        if location = -1 then failwith $"{name} uniform not found on shader."
+        gl.Uniform3(location, value.X, value.Y, value.Z)
     interface IDisposable with
         member this.Dispose() = gl.DeleteProgram(handle)
 
@@ -122,3 +125,42 @@ type Transform =
 module MathHelper =
     let degreesToRadians degrees =
         MathF.PI / 180f * degrees
+        
+type Camera =
+    {
+        Position : Vector3
+        Front : Vector3
+        Up : Vector3
+        AspectRatio : float32
+        Yaw : float32
+        Pitch : float32
+        Zoom : float32
+    }
+    static member Default =
+        {
+            Position = Vector3.Zero
+            Front = Vector3.Zero
+            Up = Vector3.Zero
+            AspectRatio = 0f
+            Yaw = -90f
+            Pitch = 0f
+            Zoom = 45f
+        }
+    member this.ModifyZoom(zoomAmount) =
+        //We don't want to be able to zoom in too close or too far away so clamp to these values
+        { this with Zoom = Math.Clamp(this.Zoom - zoomAmount, 1.0f, 45f) }
+    member this.ModifyDirection(xOffset:float32, yOffset:float32) =
+        let yaw = this.Yaw + xOffset
+        let pitch = this.Pitch - yOffset
+        //We don't want to be able to look behind us by going over our head or under our feet so make sure it stays within these bounds
+        let pitch = Math.Clamp(pitch, -89f, 89f)
+        let cameraDirection = Vector3(
+            MathF.Cos(MathHelper.degreesToRadians(yaw)) * MathF.Cos(MathHelper.degreesToRadians(pitch)),
+            MathF.Sin(MathHelper.degreesToRadians(pitch)),
+            MathF.Sin(MathHelper.degreesToRadians(yaw)) * MathF.Cos(MathHelper.degreesToRadians(pitch));
+        )
+        { this with Yaw = yaw; Pitch = pitch; Front = Vector3.Normalize(cameraDirection) }
+    member this.GetViewMatrix() =
+        Matrix4x4.CreateLookAt(this.Position, this.Position + this.Front, this.Up)
+    member this.GetProjectionMatrix() =
+        Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.degreesToRadians(this.Zoom), this.AspectRatio, 0.1f, 100.0f)

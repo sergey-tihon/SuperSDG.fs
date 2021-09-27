@@ -8,60 +8,49 @@ open SuperSDG.Core
 #nowarn "9"
 
 let Width, Height = (800, 600)
-//Setup the camera's location, and relative up and right directions
-let mutable CameraPosition = Vector3(0.0f, 0.0f, 3.0f);
-let mutable CameraFront = Vector3(0.0f, 0.0f, -1.0f);
-let CameraUp = Vector3.UnitY;
-let CameraDirection = Vector3.Zero;
-
-let mutable CameraYaw = -90f
-let mutable CameraPitch = 0f
-let mutable CameraZoom = 45f
-let mutable LastMousePosition = Vector2.Zero
-
 let Vertices = [|
-    //X    Y      Z     U   V
-    -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
-     0.5f; -0.5f; -0.5f;  1.0f; 0.0f;
-     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
+    //X    Y      Z
+    -0.5f; -0.5f; -0.5f;
+     0.5f; -0.5f; -0.5f;
+     0.5f;  0.5f; -0.5f;
+     0.5f;  0.5f; -0.5f;
+    -0.5f;  0.5f; -0.5f;
+    -0.5f; -0.5f; -0.5f;
 
-    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-     0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
-     0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
-     0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
-    -0.5f;  0.5f;  0.5f;  0.0f; 1.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+    -0.5f; -0.5f;  0.5f;
+     0.5f; -0.5f;  0.5f;
+     0.5f;  0.5f;  0.5f;
+     0.5f;  0.5f;  0.5f;
+    -0.5f;  0.5f;  0.5f;
+    -0.5f; -0.5f;  0.5f;
 
-    -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-    -0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-    -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+    -0.5f;  0.5f;  0.5f;
+    -0.5f;  0.5f; -0.5f;
+    -0.5f; -0.5f; -0.5f;
+    -0.5f; -0.5f; -0.5f;
+    -0.5f; -0.5f;  0.5f;
+    -0.5f;  0.5f;  0.5f;
 
-     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-     0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-     0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-     0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+     0.5f;  0.5f;  0.5f;
+     0.5f;  0.5f; -0.5f;
+     0.5f; -0.5f; -0.5f;
+     0.5f; -0.5f; -0.5f;
+     0.5f; -0.5f;  0.5f;
+     0.5f;  0.5f;  0.5f;
 
-    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-     0.5f; -0.5f; -0.5f;  1.0f; 1.0f;
-     0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
-     0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f;
+     0.5f; -0.5f; -0.5f;
+     0.5f; -0.5f;  0.5f;
+     0.5f; -0.5f;  0.5f;
+    -0.5f; -0.5f;  0.5f;
+    -0.5f; -0.5f; -0.5f;
 
-    -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
-     0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-     0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-    -0.5f;  0.5f;  0.5f;  0.0f; 0.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
+    -0.5f;  0.5f; -0.5f;
+     0.5f;  0.5f; -0.5f;
+     0.5f;  0.5f;  0.5f;
+     0.5f;  0.5f;  0.5f;
+    -0.5f;  0.5f;  0.5f;
+    -0.5f;  0.5f; -0.5f
 |]
 let Indices = [|
     0u; 1u; 3u;
@@ -80,8 +69,18 @@ window.add_Load(fun _ ->
         keyboard.add_KeyDown(fun keyboard key _ ->
             if key = Key.Escape then window.Close()
         )
+   
+    let mutable LastMousePosition = Vector2.Zero
+    //Start a camera at position 3 on the Z axis, looking at position -1 on the Z axis
+    let mutable camera =
+        { Camera.Default with
+            Position = Vector3.Multiply(Vector3.UnitZ, 6f)
+            Front = Vector3.Multiply(Vector3.UnitZ, -1f)
+            Up = Vector3.UnitY
+            AspectRatio = (float32 Width) / (float32 Height) }
+    
     for mice in input.Mice do
-        mice.Cursor.CursorMode <- CursorMode.Raw
+        //mice.Cursor.CursorMode <- CursorMode.Raw
         mice.add_MouseMove(fun mouse position ->
             let lookSensitivity = 0.1f
             if LastMousePosition = Vector2.Zero
@@ -91,21 +90,10 @@ window.add_Load(fun _ ->
                 let yOffset = (position.Y - LastMousePosition.Y) * lookSensitivity
                 LastMousePosition <- position
 
-                CameraYaw <- CameraYaw + xOffset
-                CameraPitch <- CameraPitch - yOffset
-                //We don't want to be able to look behind us by going over our head or under our feet so make sure it stays within these bounds
-                CameraPitch <- Math.Clamp(CameraPitch, -89.0f, 89.0f);
-
-                CameraFront <-
-                    Vector3(
-                        MathF.Cos(MathHelper.degreesToRadians(CameraYaw)) * MathF.Cos(MathHelper.degreesToRadians(CameraPitch)),
-                        MathF.Sin(MathHelper.degreesToRadians(CameraPitch)),
-                        MathF.Sin(MathHelper.degreesToRadians(CameraYaw)) * MathF.Cos(MathHelper.degreesToRadians(CameraPitch))
-                    ) |> Vector3.Normalize
+                camera <- camera.ModifyDirection(xOffset, yOffset);
         )
         mice.add_Scroll(fun mouse scrollWheel ->
-            //We don't want to be able to zoom in too close or too far away so clamp to these values
-            CameraZoom <- Math.Clamp(CameraZoom - scrollWheel.Y, 1.0f, 45f)
+            camera <- camera.ModifyZoom(scrollWheel.Y);
         )
         
     let gl = GL.GetApi(window)
@@ -114,52 +102,62 @@ window.add_Load(fun _ ->
     //Instantiating our new abstractions
     let vbo = new BufferObject<float32>(gl, Vertices, BufferTargetARB.ArrayBuffer)
     let ebo = new BufferObject<uint>(gl, Indices, BufferTargetARB.ElementArrayBuffer)
-    let vao = new VertexArrayObject<float32, uint>(gl, vbo, ebo)
-    disposables.AddRange([vbo; ebo; vao])
+    let VaoCube = new VertexArrayObject<float32, uint>(gl, vbo, ebo)
+    disposables.AddRange([vbo; ebo; VaoCube])
             
-    //Telling the VAO object how to lay out the attribute pointers
-    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
-    vao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3) 
-
-    let shader = new Shader(gl, "Resources/Shader.vert", "Resources/Shader.frag")
-    let texture = new Texture(gl, "Resources/floor.jpeg");
-    disposables.AddRange([shader; texture])
+    VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 3u, 0)
     
-    window.add_Render(fun deltaTime ->
+    //The lighting shader will give our main cube it's colour multiplied by the lights intensity
+    let lightingShader = new Shader(gl, "Resources/shader.vert", "Resources/lighting.frag")
+    //The Lamp shader uses a fragment shader that just colours it solid white so that we know it is the light source
+    let lampShader = new Shader(gl, "Resources/shader.vert", "Resources/shader.frag")
+
+    let texture = new Texture(gl, "Resources/floor.jpeg");
+    disposables.AddRange([lightingShader; lampShader; texture])
+    
+    window.add_Update(fun deltaTime ->
         let moveSpeed = 2.5f * (float32 deltaTime)
 
         if primaryKeyboard.IsKeyPressed(Key.W)
-        then CameraPosition <- CameraPosition + moveSpeed * CameraFront;
+        then camera <- { camera with Position = camera.Position + moveSpeed * camera.Front }
         if primaryKeyboard.IsKeyPressed(Key.S)
-        then CameraPosition <- CameraPosition - moveSpeed * CameraFront;
+        then camera <- { camera with Position = camera.Position - moveSpeed * camera.Front }
         if primaryKeyboard.IsKeyPressed(Key.A)
-        then CameraPosition <- CameraPosition - Vector3.Normalize(Vector3.Cross(CameraFront, CameraUp)) * moveSpeed
+        then camera <- { camera with Position = camera.Position - Vector3.Normalize(Vector3.Cross(camera.Front, camera.Up)) * moveSpeed }
         if primaryKeyboard.IsKeyPressed(Key.D)
-        then CameraPosition <- CameraPosition + Vector3.Normalize(Vector3.Cross(CameraFront, CameraUp)) * moveSpeed
+        then camera <- { camera with Position = camera.Position + Vector3.Normalize(Vector3.Cross(camera.Front, camera.Up)) * moveSpeed }
     )
     
     window.add_Render(fun deltaTime ->
         gl.Enable(EnableCap.DepthTest)
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit);
         
-        vao.Bind()
-        texture.Bind()
-        shader.Use()
-        shader.SetUniform("uTexture0", 0f)
-
-        //Use elapsed time to convert to radians to allow our cube to rotate over time
-        let difference = float32 <| (window.Time * 100.)
-
-        let model = Matrix4x4.CreateRotationY(MathHelper.degreesToRadians difference)
-                        * Matrix4x4.CreateRotationX(MathHelper.degreesToRadians difference);
-        let view = Matrix4x4.CreateLookAt(CameraPosition, CameraPosition + CameraFront, CameraUp)
-        let projection = Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.degreesToRadians(CameraZoom), float32 Width / float32 Height, 0.1f, 100.0f);
-
-        shader.SetUniform("uModel", model)
-        shader.SetUniform("uView", view)
-        shader.SetUniform("uProjection", projection)
-
+        VaoCube.Bind()
+        lightingShader.Use();
+        //texture.Bind()
+        
+        //Slightly rotate the cube to give it an angled face to look at
+        lightingShader.SetUniform("uModel", Matrix4x4.CreateRotationY(MathHelper.degreesToRadians(25f)))
+        lightingShader.SetUniform("uView", camera.GetViewMatrix())
+        lightingShader.SetUniform("uProjection", camera.GetProjectionMatrix())
+        lightingShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
+        lightingShader.SetUniform("lightColor", Vector3.One)
+        
         //We're drawing with just vertices and no indicies, and it takes 36 verticies to have a six-sided textured cube
+        gl.DrawArrays(PrimitiveType.Triangles, 0, 36u)
+        
+        lampShader.Use();
+
+        //The Lamp cube is going to be a scaled down version of the normal cubes verticies moved to a different screen location
+        let lampMatrix =
+            Matrix4x4.Identity
+            * Matrix4x4.CreateScale(0.2f)
+            * Matrix4x4.CreateTranslation(new Vector3(1.2f, 1.0f, 2.0f));
+
+        lampShader.SetUniform("uModel", lampMatrix);
+        lampShader.SetUniform("uView", camera.GetViewMatrix());
+        lampShader.SetUniform("uProjection", camera.GetProjectionMatrix());
+
         gl.DrawArrays(PrimitiveType.Triangles, 0, 36u);
     )
 

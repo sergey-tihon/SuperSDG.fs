@@ -3,6 +3,7 @@ namespace SuperSDG.Core
 open System
 open System.IO
 open System.Numerics;
+open System.Runtime.CompilerServices
 open Microsoft.FSharp.NativeInterop
 open Silk.NET.OpenGL
 open SixLabors.ImageSharp
@@ -69,6 +70,7 @@ type Shader(gl:GL, vertexPath, fragmentPath) =
     member _.SetUniform(name:string, value:Matrix4x4) =
         let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
+        //gl.UniformMatrix4(location, 1u, false, &Unsafe.As<_,float32>(&Unsafe.AsRef(&value)))
         gl.UniformMatrix4(location, 1u, false, &value.M11) // :(
     member _.SetUniform(name:string, value:Vector3) =
         let location = gl.GetUniformLocation(handle, name)

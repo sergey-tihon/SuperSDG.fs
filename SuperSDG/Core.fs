@@ -87,8 +87,10 @@ type Texture(gl:GL, path: string) as self =
     let handle = gl.GenTexture()
     do  use img : Image<Rgba32> = Image.Load(path);
         img.Mutate(fun x -> x.Flip(FlipMode.Vertical) |> ignore)
-        let data = &&img.GetPixelRowSpan(0).GetPinnableReference()
-        self.Load(gl, NativePtr.toVoidPtr data, uint <| img.Width, uint <| img.Height)
+        img.ProcessPixelRows(fun pixelAccessor ->
+            let data = &&pixelAccessor.GetRowSpan(0).GetPinnableReference()
+            self.Load(gl, NativePtr.toVoidPtr data, uint <| img.Width, uint <| img.Height)
+        )
 
     member this.Load(gl:GL, data: voidptr, width:uint, height:uint) =
         this.Bind()

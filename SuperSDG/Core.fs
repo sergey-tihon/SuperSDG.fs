@@ -30,7 +30,7 @@ type VertexArrayObject<'TVertexType, 'TIndexType when 'TVertexType : unmanaged a
         vbo.Bind()
         ebo.Bind()
 
-    member this.VertexAttributePointer(index:uint, count:int, ty:VertexAttribPointerType, vertexSize, offSet) =
+    member this.VertexAttributePointer(index:uint, count:int, ty:VertexAttribPointerType, vertexSize:uint, offSet) =
         let stride = uint32 <| vertexSize * (uint) sizeof<'TVertexType>
         let offsetPtr = IntPtr(offSet * sizeof<'TVertexType>).ToPointer()
         gl.VertexAttribPointer(index, count, ty, false, stride, offsetPtr);
@@ -63,7 +63,7 @@ type Shader(gl:GL, vertexPath, fragmentPath) =
         gl.DeleteShader(vertex)
         gl.DeleteShader(fragment)
     member _.Use() = gl.UseProgram(handle)
-    member _.SetUniform(name:string, value:float32) =
+    member _.SetUniform(name:string, value:int) =
         let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
         gl.Uniform1(location, value)
@@ -71,26 +71,41 @@ type Shader(gl:GL, vertexPath, fragmentPath) =
         let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
         //gl.UniformMatrix4(location, 1u, false, &Unsafe.As<_,float32>(&Unsafe.AsRef(&value)))
-        gl.UniformMatrix4(location, 1u, false, &value.M11) // :(
+        gl.UniformMatrix4(location, 1u, false, &value.M11) // TODO: :( hack for F# suntax
+    member _.SetUniform(name:string, value:float32) =
+        let location = gl.GetUniformLocation(handle, name)
+        if location = -1 then failwith $"{name} uniform not found on shader."
+        gl.Uniform1(location, value)
     member _.SetUniform(name:string, value:Vector3) =
         let location = gl.GetUniformLocation(handle, name)
         if location = -1 then failwith $"{name} uniform not found on shader."
         gl.Uniform3(location, value.X, value.Y, value.Z)
-    member _.SetUniform(name:string, value:int) =
-        let location = gl.GetUniformLocation(handle, name)
-        if location = -1 then failwith $"{name} uniform not found on shader."
-        gl.Uniform1(location, value)
     interface IDisposable with
         member this.Dispose() = gl.DeleteProgram(handle)
 
 type Texture(gl:GL, path: string) as self =
     let handle = gl.GenTexture()
-    do  use img : Image<Rgba32> = Image.Load(path);
-        img.Mutate(fun x -> x.Flip(FlipMode.Vertical) |> ignore)
-        img.ProcessPixelRows(fun pixelAccessor ->
-            let data = &&pixelAccessor.GetRowSpan(0).GetPinnableReference()
-            self.Load(gl, NativePtr.toVoidPtr data, uint <| img.Width, uint <| img.Height)
-        )
+    let setParameters() =
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, int GLEnum.ClampToEdge)
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, int GLEnum.ClampToEdge)
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, int GLEnum.LinearMipmapLinear)
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, int GLEnum.Linear)
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0)
+        gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 8)
+        gl.GenerateMipmap(TextureTarget.Texture2D)
+        
+    do
+        self.Bind()
+        do
+            use img = Image.Load<Rgba32>(path)
+            let width, height = uint32 <| img.Width, uint32 <| img.Height
+            gl.TexImage2D(TextureTarget.Texture2D, 0, int InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero.ToPointer())
+            img.ProcessPixelRows(fun accessor ->
+                for y in [0..accessor.Height-1] do
+                    let data = &&accessor.GetRowSpan(y).GetPinnableReference()
+                    gl.TexSubImage2D(TextureTarget.Texture2D, 0, 0, y, width, 1u, PixelFormat.Rgba, PixelType.UnsignedByte, NativePtr.toVoidPtr data);
+            )
+        setParameters()
 
     member this.Load(gl:GL, data: voidptr, width:uint, height:uint) =
         this.Bind()

@@ -7,50 +7,50 @@ open Silk.NET.Windowing
 open SuperSDG.Core
 #nowarn "9"
 
-let Width, Height = (800, 600)
+let Width, Height = (800, 700)
 let Vertices = [|
-    //X    Y      Z       Normals
-     0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-     0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
-     0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;
+    //X    Y      Z       Normals             U     V
+    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 0.0f; 1.0f;
+    0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 1.0f; 1.0f;
+    0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 1.0f; 0.0f;
+    0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 1.0f; 0.0f;
+    -0.5f;  0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 0.0f; 0.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f; 0.0f; 1.0f;
 
-    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-     0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-    -0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 0.0f; 1.0f;
+    0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 1.0f; 1.0f;
+    0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 1.0f; 0.0f;
+    0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 1.0f; 0.0f;
+    -0.5f;  0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 0.0f; 0.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f;  0.0f;  1.0f; 0.0f; 1.0f;
 
-//    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f;
-//    -0.5f;  0.5f; -0.5f; -1.0f;  0.0f;  0.0f;
-//    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f;
-//    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f;
-//    -0.5f; -0.5f;  0.5f; -1.0f;  0.0f;  0.0f;
-//    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f;
+    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f; 0.0f; 1.0f;
+    -0.5f;  0.5f; -0.5f; -1.0f;  0.0f;  0.0f; 1.0f; 1.0f;
+    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f; 1.0f; 0.0f;
+    -0.5f; -0.5f; -0.5f; -1.0f;  0.0f;  0.0f; 1.0f; 0.0f;
+    -0.5f; -0.5f;  0.5f; -1.0f;  0.0f;  0.0f; 0.0f; 0.0f;
+    -0.5f;  0.5f;  0.5f; -1.0f;  0.0f;  0.0f; 0.0f; 1.0f;
 
-     0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f;  0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f;  0.5f; -0.5f;  1.0f;  0.0f;  0.0f;
-     0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f;
+    0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f; 0.0f; 1.0f;
+    0.5f;  0.5f; -0.5f;  1.0f;  0.0f;  0.0f; 1.0f; 1.0f;
+    0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f; 1.0f; 0.0f;
+    0.5f; -0.5f; -0.5f;  1.0f;  0.0f;  0.0f; 1.0f; 0.0f;
+    0.5f; -0.5f;  0.5f;  1.0f;  0.0f;  0.0f; 0.0f; 0.0f;
+    0.5f;  0.5f;  0.5f;  1.0f;  0.0f;  0.0f; 0.0f; 1.0f;
 
-    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f;
-     0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f;
-     0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f;
-     0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f;
-    -0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f;
-    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f; 0.0f; 1.0f;
+    0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f; 1.0f; 1.0f;
+    0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f; 1.0f; 0.0f;
+    0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f; 1.0f; 0.0f;
+    -0.5f; -0.5f;  0.5f;  0.0f; -1.0f;  0.0f; 0.0f; 0.0f;
+    -0.5f; -0.5f; -0.5f;  0.0f; -1.0f;  0.0f; 0.0f; 1.0f;
 
-    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f;
-     0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
-     0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
-    -0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f;
-    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f
+    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f; 0.0f; 1.0f;
+    0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f; 1.0f; 1.0f;
+    0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f; 1.0f; 0.0f;
+    0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f; 1.0f; 0.0f;
+    -0.5f;  0.5f;  0.5f;  0.0f;  1.0f;  0.0f; 0.0f; 0.0f;
+    -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f; 0.0f; 1.0f
 |]
 let Indices = [|
     0u; 1u; 3u;
@@ -110,11 +110,9 @@ window.add_Load(fun _ ->
     let VaoCube = new VertexArrayObject<float32, uint>(gl, vbo, ebo)
     disposables.AddRange([vbo; ebo; VaoCube])
 
-    VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
-    VaoCube.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 6u, 3)
-//    VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
-//    VaoCube.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
-//    VaoCube.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
+    VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
+    VaoCube.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
+    VaoCube.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
 
     //The lighting shader will give our main cube it's colour multiplied by the lights intensity
     let lightingShader = new Shader(gl, "Resources/shader.vert", "Resources/lighting.frag")
@@ -140,6 +138,7 @@ window.add_Load(fun _ ->
     )
 
     window.add_Render(fun deltaTime ->
+        gl.Enable(EnableCap.DepthTest)
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
 
         VaoCube.Bind()
@@ -148,33 +147,30 @@ window.add_Load(fun _ ->
             //Use the 'lighting shader' that is capable of modifying the cubes colours based on ambient lighting and diffuse lighting
             lightingShader.Use()
             //Bind the diffuse map and and set to use texture0.
-            //diffuseMap.Bind(TextureUnit.Texture0);
+            diffuseMap.Bind(TextureUnit.Texture0);
             //Bind the diffuse map and and set to use texture1.
-            //specularMap.Bind(TextureUnit.Texture1);
+            specularMap.Bind(TextureUnit.Texture1);
 
             //Setup the coordinate systems for our view
-            lightingShader.SetUniform("uModel", Matrix4x4.CreateRotationY(MathHelper.degreesToRadians 25f));
-            lightingShader.SetUniform("uView", camera.GetViewMatrix());
+            lightingShader.SetUniform("uModel", Matrix4x4.Identity)
+            lightingShader.SetUniform("uView", camera.GetViewMatrix())
             lightingShader.SetUniform("uProjection", camera.GetProjectionMatrix())
-            lightingShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
-            lightingShader.SetUniform("lightColor", Vector3.One)
-            lightingShader.SetUniform("lightPos", lampPosition)
             //Let the shaders know where the Camera is looking from
-            //lightingShader.SetUniform("viewPos", camera.Position);
+            lightingShader.SetUniform("viewPos", camera.Position)
             //Configure the materials variables.
             //Diffuse is set to 0 because our diffuseMap is bound to Texture0
-            //lightingShader.SetUniform("material.diffuse", 0)
+            lightingShader.SetUniform("material.diffuse", 0);
             //Specular is set to 1 because our diffuseMap is bound to Texture1
-            //lightingShader.SetUniform("material.specular", 1)
-            //lightingShader.SetUniform("material.shininess", 32.0f)
+            lightingShader.SetUniform("material.specular", 1);
+            lightingShader.SetUniform("material.shininess", 32.0f);
 
-    //        let diffuseColor = Vector3(0.5f)
-    //        let ambientColor = diffuseColor * Vector3(0.2f)
-    //
-    //        lightingShader.SetUniform("light.ambient", ambientColor)
-    //        lightingShader.SetUniform("light.diffuse", diffuseColor) // darkened
-    //        lightingShader.SetUniform("light.specular", Vector3(1.0f, 1.0f, 1.0f))
-    //        lightingShader.SetUniform("light.position", lampPosition)
+            let diffuseColor = Vector3(0.5f)
+            let ambientColor = diffuseColor * Vector3(2.2f)
+    
+            lightingShader.SetUniform("light.ambient", ambientColor)
+            lightingShader.SetUniform("light.diffuse", diffuseColor) // darkened
+            lightingShader.SetUniform("light.specular", Vector3(1.0f, 1.0f, 1.0f))
+            lightingShader.SetUniform("light.position", lampPosition)
 
             //We're drawing with just vertices and no indicies, and it takes 36 verticies to have a six-sided textured cube
             gl.DrawArrays(PrimitiveType.Triangles, 0, 36u)

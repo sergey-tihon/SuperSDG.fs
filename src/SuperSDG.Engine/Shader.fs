@@ -8,6 +8,9 @@ type Shader(gl:GL, handle:uint32) =
     interface IDisposable with
         member _.Dispose() = gl.DeleteProgram(handle)
         
+    member _.GetUniformLocation(name:string) =
+        gl.GetUniformLocation(handle, name)
+        
     static member Create (gl:GL, vertexShaderPath, fragmentShaderPath) =        
         let loadShader (ty:ShaderType) path =
             let src = System.IO.File.ReadAllText path

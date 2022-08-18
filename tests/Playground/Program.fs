@@ -27,10 +27,10 @@ window.add_Load(fun _ ->
     let shaderProgram = Shader.Create(gl, "Resources/Shader.vert", "Resources/Shader.frag")
     
     let vertices = [|
-         0.5f;  0.5f; 0.0f;  // top right
-         0.5f; -0.5f; 0.0f;  // bottom right
-        -0.5f; -0.5f; 0.0f;  // bottom left
-        -0.5f;  0.5f; 0.0f   // top left 
+         0.5f;  0.5f; 0.0f;     1.0f; 0.0f; 0.0f;
+         0.5f; -0.5f; 0.0f;     0.0f; 1.0f; 0.0f;
+        -0.5f; -0.5f; 0.0f;     1.0f; 0.0f; 0.0f;
+        -0.5f;  0.5f; 0.0f;     0.0f; 0.0f; 1.0f;
     |]
     let indices = [|  // note that we start from 0!
         0u; 1u; 3u;   // first triangle
@@ -40,15 +40,27 @@ window.add_Load(fun _ ->
     let ebo = BufferObject.Create(gl, BufferTargetARB.ElementArrayBuffer, indices)
     
     let vao = VertexArrayObject.Create(gl, vbo, ebo)
-    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 3u, 0)
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
+    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 6u, 3)
                             
+    let mutable timeValue = 0.0                        
     window.add_Render(fun deltaTime ->
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
-
+        
         shaderProgram.Use()
+        
+        timeValue <- timeValue + deltaTime
+        let greenValue = float32 <| (Math.Sin(timeValue) / 2.0) + 0.5
+        let vertexColorLocation = shaderProgram.GetUniformLocation("ourColor")
+        gl.Uniform4(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f)
+        
+        let dxLocation = shaderProgram.GetUniformLocation("dx")
+        gl.Uniform1(dxLocation, greenValue - 0.5f)
+
         vao.Bind()
+        //gl.DrawArrays(GLEnum.Triangles, 0, 3u)
         gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
     )
 )

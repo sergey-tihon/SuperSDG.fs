@@ -1,11 +1,9 @@
-﻿open System.Drawing
-open Microsoft.FSharp.NativeInterop
-open Silk.NET.Maths
+﻿open System
+open System.IO
 open Silk.NET.Windowing
 open Silk.NET.Input
 open Silk.NET.OpenGL
-open System
-open System.IO
+open SuperSDG.Engine
 
 let mutable options = WindowOptions.Default
 options.Title <- "Playground"
@@ -16,7 +14,6 @@ options.API <- GraphicsAPI(
     APIVersion(3, 3) // Default is 3.3 (4.1 is max version on macOS)
 )
 //options.WindowState <- WindowState.Fullscreen
-
 
 let window = Window.Create options
 window.add_Load(fun _ ->
@@ -66,37 +63,19 @@ window.add_Load(fun _ ->
         0u; 1u; 3u;   // first triangle
         1u; 2u; 3u    // second triangle
     |]
-    let vao = gl.GenVertexArray()
-    let vbo = gl.GenBuffer()
-    let ebo = gl.GenBuffer()
-    gl.BindVertexArray vao
+    let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, vertices)
+    let ebo = BufferObject.Create(gl, BufferTargetARB.ElementArrayBuffer, indices)
     
-    gl.BindBuffer(GLEnum.ArrayBuffer, vbo)
-    do  use ptr = fixed vertices
-        let size = unativeint <| (vertices.Length * sizeof<float32>)
-        gl.BufferData(GLEnum.ArrayBuffer, size, NativePtr.toVoidPtr ptr, GLEnum.StaticDraw)
-    
-    gl.BindBuffer(GLEnum.ElementArrayBuffer, ebo)
-    do  use ptr = fixed indices
-        let size = unativeint <| (indices.Length * sizeof<uint32>)
-        gl.BufferData(GLEnum.ElementArrayBuffer, size, NativePtr.toVoidPtr ptr, GLEnum.StaticDraw)
-        
-    let stride = uint32 <| 3 * sizeof<float32>
-    let offsetPtr = IntPtr.Zero.ToPointer() 
-    gl.VertexAttribPointer(0u, 3, GLEnum.Float, false, stride, offsetPtr)
-    gl.EnableVertexAttribArray(0u)
-        
-    gl.BindBuffer(GLEnum.ArrayBuffer, 0u)
-    gl.BindVertexArray(0u)
-    
+    let vao = VertexArrayObject.Create(gl, vbo, ebo)
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 3u, 0)
+                            
     window.add_Render(fun deltaTime ->
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
 
         gl.UseProgram shaderProgram
-        gl.BindVertexArray vao
-        //gl.BindBuffer(GLEnum.ElementArrayBuffer, ebo)
+        vao.Bind()
         gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
     )
 )

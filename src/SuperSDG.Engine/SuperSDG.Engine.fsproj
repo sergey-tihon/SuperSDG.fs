@@ -6,13 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Resources\Shader.vert">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="Resources\Shader.frag">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Compile Include="Program.fs" />
+        <Compile Include="BufferObject.fs" />
+        <Compile Include="VertexArrayObject.fs" />
     </ItemGroup>
 
     <ItemGroup>

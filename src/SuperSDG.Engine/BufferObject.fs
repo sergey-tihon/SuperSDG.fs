@@ -12,7 +12,7 @@ type BufferObject<'a when 'a: unmanaged>
     interface IDisposable with
         member _.Dispose() = gl.DeleteBuffer(handle)
         
-    static member Create (gl:GL, bufferType: BufferTargetARB, data:'a[] when 'a: unmanaged) =
+    static member Create (gl:GL, bufferType: BufferTargetARB, data:'a[]) =
         let handle = gl.GenBuffer()
         gl.BindBuffer(bufferType, handle)
         use ptr = fixed data

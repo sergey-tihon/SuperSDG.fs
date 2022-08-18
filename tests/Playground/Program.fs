@@ -24,34 +24,7 @@ window.add_Load(fun _ ->
         )
         
     let gl = GL.GetApi(window)
-    
-    let src = File.ReadAllText "Resources/Shader.vert"
-    let vertexShader= gl.CreateShader(GLEnum.VertexShader)
-    gl.ShaderSource(vertexShader, src)
-    gl.CompileShader(vertexShader)
-    let infoLog = gl.GetShaderInfoLog(vertexShader)
-    if not <| String.IsNullOrEmpty(infoLog)
-    then failwith $"ERROR::SHADER::VERTEX::COMPILATION_FAILED {infoLog}"
-    
-    let src = File.ReadAllText "Resources/Shader.frag"
-    let fragmentShader = gl.CreateShader(GLEnum.FragmentShader)
-    gl.ShaderSource(fragmentShader, src)
-    gl.CompileShader(fragmentShader)
-    let infoLog = gl.GetShaderInfoLog(fragmentShader)
-    if not <| String.IsNullOrEmpty(infoLog)
-    then failwith $"ERROR::SHADER::FRAGMENT::COMPILATION_FAILED {infoLog}"
-    
-    let shaderProgram = gl.CreateProgram()
-    gl.AttachShader(shaderProgram, vertexShader)
-    gl.AttachShader(shaderProgram, fragmentShader)
-    gl.LinkProgram(shaderProgram)
-    let status = gl.GetProgram(shaderProgram, GLEnum.LinkStatus)
-    if status = 0 then failwith $"Program failed to link with error: {gl.GetProgramInfoLog(shaderProgram)}"
-    //gl.DetachShader(shaderProgram, vertexShader)
-    //gl.DetachShader(shaderProgram, fragmentShader)
-    gl.DeleteShader(vertexShader)
-    gl.DeleteShader(fragmentShader)
-    
+    let shaderProgram = Shader.Create(gl, "Resources/Shader.vert", "Resources/Shader.frag")
     
     let vertices = [|
          0.5f;  0.5f; 0.0f;  // top right
@@ -74,7 +47,7 @@ window.add_Load(fun _ ->
         gl.Clear(ClearBufferMask.ColorBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
 
-        gl.UseProgram shaderProgram
+        shaderProgram.Use()
         vao.Bind()
         gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
     )

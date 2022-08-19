@@ -147,7 +147,7 @@ type Transform =
 
 module MathHelper =
     let degreesToRadians degrees =
-        MathF.PI / 180f * degrees
+        degrees * MathF.PI / 180f
         
 type Camera =
     {

@@ -9,6 +9,7 @@
         <Compile Include="VertexArrayObject.fs" />
         <Compile Include="Shader.fs" />
         <Compile Include="Texture.fs" />
+        <Compile Include="Transform.fs" />
     </ItemGroup>
 
     <ItemGroup>

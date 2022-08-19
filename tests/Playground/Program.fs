@@ -1,5 +1,6 @@
 ﻿open System
 open System.IO
+open System.Numerics
 open Silk.NET.Maths
 open Silk.NET.Windowing
 open Silk.NET.Input
@@ -48,7 +49,7 @@ window.add_Load(fun _ ->
     vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
     vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
     vao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
-    gl.EnableVertexAttribArray(2u);
+    //gl.EnableVertexAttribArray(2u);
                             
     window.add_Render(fun deltaTime ->
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -56,16 +57,17 @@ window.add_Load(fun _ ->
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
         
         shaderProgram.Use()
-        shaderProgram.SetInt("texture1",0)
-        shaderProgram.SetInt("texture2",1)
+        shaderProgram.SetUniform("texture1", 0)
+        shaderProgram.SetUniform("texture2", 1)
+        let blend = float32 <| Math.Sin(window.Time) / 2.0 + 0.5
+        shaderProgram.SetUniform("blend", blend)
+        let transform =
+            { Transform.Identity with
+                Position = Vector3(blend - 0.5f, -0.f, 0.f)
+                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, float32 window.Time) }
+        shaderProgram.SetUniform("transform", transform.ViewMatrix)
         
-        let greenValue = float32 <| (Math.Sin(window.Time) / 2.0) + 0.5
-        let vertexColorLocation = shaderProgram.GetUniformLocation("ourColor")
-        gl.Uniform4(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f)
         
-        let dxLocation = shaderProgram.GetUniformLocation("dx")
-        gl.Uniform1(dxLocation, greenValue - 0.5f)
-
         texture1.Bind(TextureUnit.Texture0)
         texture2.Bind(TextureUnit.Texture1)
         vao.Bind()

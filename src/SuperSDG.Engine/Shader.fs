@@ -17,6 +17,8 @@ type Shader(gl:GL, handle:uint32) =
         gl.Uniform1(this.GetUniformLocation(name), value)
     member this.SetUniform(name, value:float32) =
         gl.Uniform1(this.GetUniformLocation(name), value)
+    member this.SetUniform(name, value:Vector3) =
+        gl.Uniform3(this.GetUniformLocation(name), value.X, value.Y, value.Z)
     member this.SetUniform(name, value:Matrix4x4) =
         gl.UniformMatrix4(this.GetUniformLocation(name), 1u, false, &value.M11) // TODO: :( hack for F# syntax)
 

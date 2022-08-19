@@ -4,8 +4,8 @@ open Silk.NET.Input
 open Silk.NET.Maths
 open Silk.NET.OpenGL
 open Silk.NET.Windowing
-open SuperSDG.Core
-#nowarn "9"
+open SuperSDG.Engine
+
 
 let Width, Height = (800, 700)
 let Vertices = [|
@@ -105,9 +105,9 @@ window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
 
     //Instantiating our new abstractions
-    let ebo = new BufferObject<uint>(gl, Indices, BufferTargetARB.ElementArrayBuffer)
-    let vbo = new BufferObject<float32>(gl, Vertices, BufferTargetARB.ArrayBuffer)
-    let VaoCube = new VertexArrayObject<float32, uint>(gl, vbo, ebo)
+    let ebo = BufferObject.Create(gl, BufferTargetARB.ElementArrayBuffer, Indices)
+    let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, Vertices)
+    let VaoCube = VertexArrayObject.Create(gl, vbo, ebo)
     disposables.AddRange([vbo; ebo; VaoCube])
 
     VaoCube.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
@@ -115,13 +115,13 @@ window.add_Load(fun _ ->
     VaoCube.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
 
     //The lighting shader will give our main cube it's colour multiplied by the lights intensity
-    let lightingShader = new Shader(gl, "Resources/shader.vert", "Resources/lighting.frag")
+    let lightingShader = Shader.Create(gl, "Resources/shader.vert", "Resources/lighting.frag")
     //The Lamp shader uses a fragment shader that just colours it solid white so that we know it is the light source
-    let lampShader = new Shader(gl, "Resources/shader.vert", "Resources/shader.frag")
+    let lampShader = Shader.Create(gl, "Resources/shader.vert", "Resources/shader.frag")
     let lampPosition = Vector3(1.2f, 1.0f, 2.0f)
 
-    let diffuseMap = new Texture(gl, "Resources/floor.jpeg")
-    let specularMap = new Texture(gl, "Resources/wall.jpeg");
+    let diffuseMap = Texture.Load(gl, "Resources/floor.jpeg")
+    let specularMap = Texture.Load(gl, "Resources/wall.jpeg");
     disposables.AddRange([lightingShader; lampShader; diffuseMap; specularMap])
 
     window.add_Update(fun deltaTime ->

@@ -22,7 +22,6 @@
         <Content Include="Resources\lighting.frag">
           <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-        <Compile Include="Core.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
@@ -32,6 +31,10 @@
       <PackageReference Include="Silk.NET.Windowing" Version="2.16.0" />
       <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
       <PackageReference Update="FSharp.Core" Version="6.0.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SuperSDG.Engine\SuperSDG.Engine.fsproj" />
     </ItemGroup>
 
 </Project>

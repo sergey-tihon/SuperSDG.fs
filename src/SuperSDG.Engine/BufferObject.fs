@@ -1,12 +1,9 @@
 ﻿namespace SuperSDG.Engine
 
 open System
-open Microsoft.FSharp.NativeInterop
 open Silk.NET.OpenGL
 
-#nowarn "9"
-
-type BufferObject<'a when 'a: unmanaged>
+type BufferObject<'a when 'a: struct and 'a:> ValueType and 'a:(new : unit -> 'a )>
     (gl:GL, bufferType: BufferTargetARB, handle:uint32) =
     member _.Bind() = gl.BindBuffer(bufferType, handle)
     interface IDisposable with
@@ -15,8 +12,6 @@ type BufferObject<'a when 'a: unmanaged>
     static member Create (gl:GL, bufferType: BufferTargetARB, data:'a[]) =
         let handle = gl.GenBuffer()
         gl.BindBuffer(bufferType, handle)
-        use ptr = fixed data
-        let size = unativeint <| (data.Length * sizeof<'a>)
-        gl.BufferData(bufferType, size, NativePtr.toVoidPtr ptr, BufferUsageARB.StaticDraw)
+        gl.BufferData(bufferType, ReadOnlySpan(data), BufferUsageARB.StaticDraw)
         
         new BufferObject<'a>(gl, bufferType, handle)

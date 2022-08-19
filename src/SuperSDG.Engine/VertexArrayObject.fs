@@ -3,7 +3,7 @@ namespace SuperSDG.Engine
 open System
 open Silk.NET.OpenGL
 
-type VertexArrayObject<'a when 'a: unmanaged>
+type VertexArrayObject<'a when 'a: struct and 'a:> ValueType and 'a:(new : unit -> 'a )>
     (gl:GL, handle:uint32) =
     member _.Bind() = gl.BindVertexArray(handle)
     interface IDisposable with
@@ -12,7 +12,7 @@ type VertexArrayObject<'a when 'a: unmanaged>
     member this.VertexAttributePointer(index:uint, count:int, ty:VertexAttribPointerType, vertexSize:uint, offSet) =
         let stride = uint32 <| vertexSize * uint(sizeof<'a>)
         let offsetPtr = IntPtr(offSet * sizeof<'a>).ToPointer()
-        gl.VertexAttribPointer(index, count, ty, false, stride, offsetPtr);
+        gl.VertexAttribPointer(index, count, ty, false, stride, offsetPtr)
         gl.EnableVertexAttribArray(index)
         
     static member Create (gl:GL, vbo: BufferObject<'a>, ebo: BufferObject<_>) =

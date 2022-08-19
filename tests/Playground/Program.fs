@@ -27,7 +27,8 @@ window.add_Load(fun _ ->
         
     let gl = GL.GetApi(window)
     let shaderProgram = Shader.Create(gl, "Resources/Shader.vert", "Resources/Shader.frag")
-    let texture = Texture.Load(gl, "Resources/floor.jpeg")
+    let texture1 = Texture.Load(gl, "Resources/floor.jpeg")
+    let texture2 = Texture.Load(gl, "Resources/wall.jpeg")
     
     let vertices = [|
          // positions           // colors           // texture coords
@@ -55,6 +56,8 @@ window.add_Load(fun _ ->
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
         
         shaderProgram.Use()
+        shaderProgram.SetInt("texture1",0)
+        shaderProgram.SetInt("texture2",1)
         
         let greenValue = float32 <| (Math.Sin(window.Time) / 2.0) + 0.5
         let vertexColorLocation = shaderProgram.GetUniformLocation("ourColor")
@@ -63,7 +66,8 @@ window.add_Load(fun _ ->
         let dxLocation = shaderProgram.GetUniformLocation("dx")
         gl.Uniform1(dxLocation, greenValue - 0.5f)
 
-        texture.Bind()
+        texture1.Bind(TextureUnit.Texture0)
+        texture2.Bind(TextureUnit.Texture1)
         vao.Bind()
         //gl.DrawArrays(GLEnum.Triangles, 0, 3u)
         gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())

@@ -11,6 +11,10 @@ type Shader(gl:GL, handle:uint32) =
     member _.GetUniformLocation(name:string) =
         gl.GetUniformLocation(handle, name)
         
+    member this.SetInt(name, value:int) =
+        let location = this.GetUniformLocation(name)
+        gl.Uniform1(location, value)
+        
     static member Create (gl:GL, vertexShaderPath, fragmentShaderPath) =        
         let loadShader (ty:ShaderType) path =
             let src = System.IO.File.ReadAllText path

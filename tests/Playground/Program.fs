@@ -1,5 +1,6 @@
 ﻿open System
 open System.IO
+open Silk.NET.Maths
 open Silk.NET.Windowing
 open Silk.NET.Input
 open Silk.NET.OpenGL
@@ -7,6 +8,7 @@ open SuperSDG.Engine
 
 let mutable options = WindowOptions.Default
 options.Title <- "Playground"
+options.Size <- Vector2D(1000, 1000)
 options.API <- GraphicsAPI(
     ContextAPI.OpenGL,
     ContextProfile.Core, // Only modern OpenGL functions
@@ -25,12 +27,14 @@ window.add_Load(fun _ ->
         
     let gl = GL.GetApi(window)
     let shaderProgram = Shader.Create(gl, "Resources/Shader.vert", "Resources/Shader.frag")
+    let texture = Texture.Load(gl, "Resources/floor.jpeg")
     
     let vertices = [|
-         0.5f;  0.5f; 0.0f;     1.0f; 0.0f; 0.0f;
-         0.5f; -0.5f; 0.0f;     0.0f; 1.0f; 0.0f;
-        -0.5f; -0.5f; 0.0f;     1.0f; 0.0f; 0.0f;
-        -0.5f;  0.5f; 0.0f;     0.0f; 0.0f; 1.0f;
+         // positions           // colors           // texture coords
+         0.5f;  0.5f; 0.0f;     1.0f; 0.0f; 0.0f;   1.0f; 1.0f;
+         0.5f; -0.5f; 0.0f;     0.0f; 1.0f; 0.0f;   1.0f; 0.0f;
+        -0.5f; -0.5f; 0.0f;     1.0f; 0.0f; 0.0f;   0.0f; 0.0f;
+        -0.5f;  0.5f; 0.0f;     0.0f; 0.0f; 1.0f;   0.0f; 1.0f;
     |]
     let indices = [|  // note that we start from 0!
         0u; 1u; 3u;   // first triangle
@@ -40,10 +44,11 @@ window.add_Load(fun _ ->
     let ebo = BufferObject.Create(gl, BufferTargetARB.ElementArrayBuffer, indices)
     
     let vao = VertexArrayObject.Create(gl, vbo, ebo)
-    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
-    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 6u, 3)
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
+    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
+    vao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
+    gl.EnableVertexAttribArray(2u);
                             
-    let mutable timeValue = 0.0                        
     window.add_Render(fun deltaTime ->
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit)
@@ -51,14 +56,14 @@ window.add_Load(fun _ ->
         
         shaderProgram.Use()
         
-        timeValue <- timeValue + deltaTime
-        let greenValue = float32 <| (Math.Sin(timeValue) / 2.0) + 0.5
+        let greenValue = float32 <| (Math.Sin(window.Time) / 2.0) + 0.5
         let vertexColorLocation = shaderProgram.GetUniformLocation("ourColor")
         gl.Uniform4(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f)
         
         let dxLocation = shaderProgram.GetUniformLocation("dx")
         gl.Uniform1(dxLocation, greenValue - 0.5f)
 
+        texture.Bind()
         vao.Bind()
         //gl.DrawArrays(GLEnum.Triangles, 0, 3u)
         gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())

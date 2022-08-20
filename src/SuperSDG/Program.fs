@@ -106,6 +106,7 @@ window.add_Load(fun _ ->
     gl.DepthFunc(DepthFunction.Less)
 
     let disposables = Collections.Generic.List<IDisposable>()
+    disposables.AddRange([input; gl])
 
     //Instantiating our new abstractions
     let ebo = BufferObject.Create(gl, BufferTargetARB.ElementArrayBuffer, Indices)
@@ -199,8 +200,9 @@ window.add_Load(fun _ ->
     )
 
     window.add_Closing(fun _ ->
-        for x in disposables do
-            x.Dispose()
+        disposables
+        |> Seq.rev
+        |> Seq.iter (fun x -> x.Dispose())
     )
 )
 

@@ -22,6 +22,8 @@ options.API <- GraphicsAPI(
 
 let window = Window.Create options
 window.add_Load(fun _ ->
+    let disposables = Collections.Generic.List<IDisposable>()
+
     let input = window.CreateInput()
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
@@ -32,6 +34,7 @@ window.add_Load(fun _ ->
     let assets = AssetManager(Assembly.GetExecutingAssembly())
         
     let gl = GL.GetApi(window)
+    disposables.AddRange([input; gl])
     
     let shaderProgram = Shader.Create(gl,
         assets.LoadEmbeddedText "Shader.vert",
@@ -41,6 +44,7 @@ window.add_Load(fun _ ->
         Texture.Load(gl, stream)
     let texture1 = loadTexture "floor.jpeg"
     let texture2 = loadTexture "wall.jpeg"
+    disposables.AddRange([shaderProgram; texture1; texture2])
     
     let vertices = [|
          // positions           // colors           // texture coords
@@ -61,6 +65,7 @@ window.add_Load(fun _ ->
     vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
     vao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
     //gl.EnableVertexAttribArray(2u);
+    disposables.AddRange([vao; vbo; ebo])
                             
     window.add_Render(fun deltaTime ->
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -72,18 +77,33 @@ window.add_Load(fun _ ->
         shaderProgram.SetUniform("texture2", 1)
         let blend = float32 <| Math.Sin(window.Time) / 2.0 + 0.5
         shaderProgram.SetUniform("blend", blend)
-        let transform =
-            { Transform.Identity with
-                Position = Vector3(blend - 0.5f, -0.f, 0.f)
-                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitZ, float32 window.Time) }
-        shaderProgram.SetUniform("transform", transform.ViewMatrix)
         
+        let model = {
+            Transform.Identity with
+                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.degreesToRadians -55f)
+        }
+        shaderProgram.SetUniform("model", model.ViewMatrix)
+        let view = {
+            Transform.Identity with
+                Position = Vector3(blend - 0.5f, -0.f, -3.f)
+        }
+        shaderProgram.SetUniform("view", view.ViewMatrix)
+        let projection =
+            let aspectRatio = float32(window.Size.X) / float32(window.Size.Y)
+            Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI/4f, aspectRatio, 0.1f, 100f)
+        shaderProgram.SetUniform("projection", projection)
         
         texture1.Bind(TextureUnit.Texture0)
         texture2.Bind(TextureUnit.Texture1)
         vao.Bind()
         //gl.DrawArrays(GLEnum.Triangles, 0, 3u)
         gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
+    )
+    
+    window.add_Closing(fun _ ->
+        disposables
+        |> Seq.rev
+        |> Seq.iter (fun x -> x.Dispose())
     )
 )
 window.Run();

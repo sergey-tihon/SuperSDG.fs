@@ -1,6 +1,7 @@
 namespace SuperSDG.Engine
 
 open System
+open System.IO
 open Microsoft.FSharp.NativeInterop
 open Silk.NET.OpenGL
 open SixLabors.ImageSharp
@@ -18,12 +19,12 @@ type Texture(gl:GL, handle:uint32) =
     member _.GetUniformLocation(name:string) =
         gl.GetUniformLocation(handle, name)
         
-    static member Load (gl:GL, filePath: string) =
+    static member Load (gl:GL, stream: Stream) =
         let handle = gl.GenTexture()
         gl.ActiveTexture(TextureUnit.Texture0);
         gl.BindTexture(TextureTarget.Texture2D, handle)
         do
-            use img = Image.Load<Rgba32>(filePath)
+            use img = Image.Load<Rgba32>(stream)
             let width, height = uint32 <| img.Width, uint32 <| img.Height
             gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba8, width, height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, IntPtr.Zero.ToPointer())
             img.ProcessPixelRows(fun accessor ->

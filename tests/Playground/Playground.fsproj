@@ -6,18 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Content Include="Resources\Shader.vert">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="Resources\Shader.frag">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="Resources\floor.jpeg">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-        <Content Include="Resources\wall.jpeg">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
+        <EmbeddedResource Include="Resources\Shader.vert" />
+        <EmbeddedResource Include="Resources\Shader.frag" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
@@ -30,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\src\SuperSDG.Engine\SuperSDG.Engine.fsproj" />
+      <ProjectReference Include="..\..\src\SuperSDG\SuperSDG.fsproj" />
     </ItemGroup>
 
 </Project>

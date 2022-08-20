@@ -1,9 +1,11 @@
 open System
 open System.Numerics
+open System.Reflection
 open Silk.NET.Input
 open Silk.NET.Maths
 open Silk.NET.OpenGL
 open Silk.NET.Windowing
+open SuperSDG
 open SuperSDG.Engine
 
 
@@ -98,6 +100,7 @@ window.add_Load(fun _ ->
             camera <- camera.ModifyZoom(scrollWheel.Y);
         )
 
+    let assets = AssetManager(Assembly.GetExecutingAssembly())
     let gl = GL.GetApi(window)
     gl.Enable(EnableCap.DepthTest)
     gl.DepthFunc(DepthFunction.Less)
@@ -115,13 +118,16 @@ window.add_Load(fun _ ->
     VaoCube.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
 
     //The lighting shader will give our main cube it's colour multiplied by the lights intensity
-    let lightingShader = Shader.Create(gl, "Resources/shader.vert", "Resources/lighting.frag")
+    let lightingShader = Shader.Create(gl, assets.LoadEmbeddedText "Shader.vert", assets.LoadEmbeddedText  "lighting.frag")
     //The Lamp shader uses a fragment shader that just colours it solid white so that we know it is the light source
-    let lampShader = Shader.Create(gl, "Resources/shader.vert", "Resources/shader.frag")
+    let lampShader = Shader.Create(gl, assets.LoadEmbeddedText "Shader.vert", assets.LoadEmbeddedText  "Shader.frag")
     let lampPosition = Vector3(1.2f, 1.0f, 2.0f)
 
-    let diffuseMap = Texture.Load(gl, "Resources/floor.jpeg")
-    let specularMap = Texture.Load(gl, "Resources/wall.jpeg");
+    let loadTexture name =
+        use stream = assets.LoadEmbeddedStream name
+        Texture.Load(gl, stream)
+    let diffuseMap = loadTexture "floor.jpeg"
+    let specularMap = loadTexture "wall.jpeg"
     disposables.AddRange([lightingShader; lampShader; diffuseMap; specularMap])
 
     window.add_Update(fun deltaTime ->

@@ -1,10 +1,12 @@
 ﻿open System
 open System.IO
 open System.Numerics
+open System.Reflection
 open Silk.NET.Maths
 open Silk.NET.Windowing
 open Silk.NET.Input
 open Silk.NET.OpenGL
+open SuperSDG
 open SuperSDG.Engine
 
 let mutable options = WindowOptions.Default
@@ -25,11 +27,20 @@ window.add_Load(fun _ ->
         keyboard.add_KeyDown(fun keyboard key _ ->
             if key = Key.Escape then window.Close()
         )
+    
+    let sharedAssets = AssetManager(typeof<AssetManager>.Assembly)
+    let assets = AssetManager(Assembly.GetExecutingAssembly())
         
     let gl = GL.GetApi(window)
-    let shaderProgram = Shader.Create(gl, "Resources/Shader.vert", "Resources/Shader.frag")
-    let texture1 = Texture.Load(gl, "Resources/floor.jpeg")
-    let texture2 = Texture.Load(gl, "Resources/wall.jpeg")
+    
+    let shaderProgram = Shader.Create(gl,
+        assets.LoadEmbeddedText "Shader.vert",
+        assets.LoadEmbeddedText "Shader.frag")
+    let loadTexture name =
+        use stream = sharedAssets.LoadEmbeddedStream name
+        Texture.Load(gl, stream)
+    let texture1 = loadTexture "floor.jpeg"
+    let texture2 = loadTexture "wall.jpeg"
     
     let vertices = [|
          // positions           // colors           // texture coords

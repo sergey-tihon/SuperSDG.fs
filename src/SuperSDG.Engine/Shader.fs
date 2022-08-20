@@ -23,9 +23,8 @@ type Shader(gl:GL, handle:uint32) =
         gl.UniformMatrix4(this.GetUniformLocation(name), 1u, false, &value.M11) // TODO: :( hack for F# syntax)
 
         
-    static member Create (gl:GL, vertexShaderPath, fragmentShaderPath) =        
-        let loadShader (ty:ShaderType) path =
-            let src = System.IO.File.ReadAllText path
+    static member Create (gl:GL, vertexShader, fragmentShader) =        
+        let loadShader (ty:ShaderType) src =
             let handle = gl.CreateShader(ty)
             gl.ShaderSource(handle, src)
             gl.CompileShader(handle)
@@ -35,8 +34,8 @@ type Shader(gl:GL, handle:uint32) =
             handle
             
         let handle = gl.CreateProgram()
-        let vertex = loadShader ShaderType.VertexShader vertexShaderPath
-        let fragment = loadShader ShaderType.FragmentShader fragmentShaderPath
+        let vertex = loadShader ShaderType.VertexShader vertexShader
+        let fragment = loadShader ShaderType.FragmentShader fragmentShader
         gl.AttachShader(handle, vertex)
         gl.AttachShader(handle, fragment)
         gl.LinkProgram(handle)

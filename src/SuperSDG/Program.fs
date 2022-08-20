@@ -61,6 +61,7 @@ let Indices = [|
 
 let mutable options = WindowOptions.Default
 options.Size <- Vector2D<int>(Width, Height)
+options.PreferredDepthBufferBits <- 24
 options.Title <- "SuperSDG v3"
 
 let window = Window.Create options

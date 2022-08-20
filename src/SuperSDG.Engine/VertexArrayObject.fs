@@ -15,10 +15,10 @@ type VertexArrayObject<'a when 'a: struct and 'a:> ValueType and 'a:(new : unit 
         gl.VertexAttribPointer(index, count, ty, false, stride, offsetPtr)
         gl.EnableVertexAttribArray(index)
         
-    static member Create (gl:GL, vbo: BufferObject<'a>, ebo: BufferObject<_>) =
+    static member Create (gl:GL, vbo: BufferObject<'a>, ?ebo: BufferObject<_>) =
         let handle = gl.GenVertexArray()
         gl.BindVertexArray(handle)
         vbo.Bind()
-        ebo.Bind()
+        if ebo.IsSome then ebo.Value.Bind()
         
         new VertexArrayObject<'a>(gl, handle)

@@ -11,7 +11,9 @@ open SuperSDG.Engine
 
 let mutable options = WindowOptions.Default
 options.Title <- "Playground"
-options.Size <- Vector2D(1000, 1000)
+options.Size <- Vector2D(1280, 720)
+options.PreferredDepthBufferBits <- 24
+options.PreferredStencilBufferBits <- 8
 options.API <- GraphicsAPI(
     ContextAPI.OpenGL,
     ContextProfile.Core, // Only modern OpenGL functions
@@ -34,6 +36,7 @@ window.add_Load(fun _ ->
     let assets = AssetManager(Assembly.GetExecutingAssembly())
         
     let gl = GL.GetApi(window)
+    gl.Enable(GLEnum.DepthTest)
     disposables.AddRange([input; gl])
     
     let shaderProgram = Shader.Create(gl,
@@ -47,57 +50,110 @@ window.add_Load(fun _ ->
     disposables.AddRange([shaderProgram; texture1; texture2])
     
     let vertices = [|
-         // positions           // colors           // texture coords
-         0.5f;  0.5f; 0.0f;     1.0f; 0.0f; 0.0f;   1.0f; 1.0f;
-         0.5f; -0.5f; 0.0f;     0.0f; 1.0f; 0.0f;   1.0f; 0.0f;
-        -0.5f; -0.5f; 0.0f;     1.0f; 0.0f; 0.0f;   0.0f; 0.0f;
-        -0.5f;  0.5f; 0.0f;     0.0f; 0.0f; 1.0f;   0.0f; 1.0f;
+        -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
+         0.5f; -0.5f; -0.5f;  1.0f; 0.0f;
+         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+        -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
+        -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
+
+        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+         0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
+         0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
+         0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
+        -0.5f;  0.5f;  0.5f;  0.0f; 1.0f;
+        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+
+        -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+        -0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+        -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+
+         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+         0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+         0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+         0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+
+        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+         0.5f; -0.5f; -0.5f;  1.0f; 1.0f;
+         0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
+         0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
+        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
+        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
+
+        -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
+         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
+         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
+        -0.5f;  0.5f;  0.5f;  0.0f; 0.0f;
+        -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
     |]
-    let indices = [|  // note that we start from 0!
-        0u; 1u; 3u;   // first triangle
-        1u; 2u; 3u    // second triangle
+    let cubePositions = [|
+        Vector3( 0.0f,  0.0f,  0.0f);
+        Vector3( 2.0f,  5.0f, -15.0f);
+        Vector3(-1.5f, -2.2f, -2.5f);
+        Vector3(-3.8f, -2.0f, -12.3f);
+        Vector3( 2.4f, -0.4f, -3.5f);
+        Vector3(-1.7f,  3.0f, -7.5f);
+        Vector3( 1.3f, -2.0f, -2.5f);
+        Vector3( 1.5f,  2.0f, -2.5f);
+        Vector3( 1.5f,  0.2f, -1.5f);
+        Vector3(-1.3f,  1.0f, -1.5f)
     |]
     let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, vertices)
-    let ebo = BufferObject.Create(gl, BufferTargetARB.ElementArrayBuffer, indices)
     
-    let vao = VertexArrayObject.Create(gl, vbo, ebo)
-    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
-    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
-    vao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
+    let vao = VertexArrayObject.Create(gl, vbo)
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+    vao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3)
     //gl.EnableVertexAttribArray(2u);
-    disposables.AddRange([vao; vbo; ebo])
+    disposables.AddRange([vao; vbo])
+    
+    shaderProgram.Use()
+    shaderProgram.SetUniform("texture1", 0)
+    shaderProgram.SetUniform("texture2", 1)
                             
     window.add_Render(fun deltaTime ->
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        gl.Clear(ClearBufferMask.ColorBufferBit)
+        gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
         
+        texture1.Bind(TextureUnit.Texture0)
+        texture2.Bind(TextureUnit.Texture1)
         shaderProgram.Use()
-        shaderProgram.SetUniform("texture1", 0)
-        shaderProgram.SetUniform("texture2", 1)
-        let blend = float32 <| Math.Sin(window.Time) / 2.0 + 0.5
-        shaderProgram.SetUniform("blend", blend)
         
-        let model = {
-            Transform.Identity with
-                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathHelper.degreesToRadians -55f)
-        }
-        shaderProgram.SetUniform("model", model.ViewMatrix)
         let view = {
             Transform.Identity with
-                Position = Vector3(blend - 0.5f, -0.f, -3.f)
+                Position = Vector3(0.0f, 0.f, -5.f)
         }
         shaderProgram.SetUniform("view", view.ViewMatrix)
         let projection =
             let aspectRatio = float32(window.Size.X) / float32(window.Size.Y)
-            Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI/4f, aspectRatio, 0.1f, 100f)
+            Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.degreesToRadians 45f, aspectRatio, 0.1f, 100f)
         shaderProgram.SetUniform("projection", projection)
         
-        texture1.Bind(TextureUnit.Texture0)
-        texture2.Bind(TextureUnit.Texture1)
         vao.Bind()
-        //gl.DrawArrays(GLEnum.Triangles, 0, 3u)
-        gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
+        
+        cubePositions
+        |> Seq.iteri(fun i cubePos ->
+            let blend = Math.Sin(window.Time + float(i)) / 2.0 + 0.5
+            shaderProgram.SetUniform("blend", float32 blend)
+            
+            let angle = window.Time * 10. * float(i+1)
+            let model = {
+                Transform.Identity with
+                    Position = cubePos
+                    Rotation = Quaternion.CreateFromAxisAngle(
+                        Vector3(1.0f, 0.3f, 0.5f),
+                        MathHelper.degreesToRadians(float32 angle))
+            }
+            shaderProgram.SetUniform("model", model.ViewMatrix)
+            gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        )
+        //gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
     )
     
     window.add_Closing(fun _ ->

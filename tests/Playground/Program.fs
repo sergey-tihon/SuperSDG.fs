@@ -26,10 +26,25 @@ let window = Window.Create options
 window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
 
+    let mutable cameraPos = Vector3(0.0f, 0.0f,  3.0f);
+    let cameraFront = Vector3(0.0f, 0.0f, -1.0f);
+    let cameraUp    = Vector3(0.0f, 1.0f,  0.0f)
+    let cameraSpeed = 2.5f
+    
     let input = window.CreateInput()
+    let pressedKeys = Collections.Generic.Dictionary<Key, float32 -> unit>()
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
-            if key = Key.Escape then window.Close()
+            match key with 
+            | Key.Escape -> window.Close()
+            | Key.W -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos + cameraFront * cameraSpeed * dt)
+            | Key.S -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos - cameraFront * cameraSpeed * dt)
+            | Key.A -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos - Vector3.Normalize(Vector3.Cross(cameraFront, cameraUp)) * cameraSpeed * dt)
+            | Key.D -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos + Vector3.Normalize(Vector3.Cross(cameraFront, cameraUp)) * cameraSpeed * dt)
+            | _ -> ()
+        )
+        keyboard.add_KeyUp(fun keyboard key _ ->
+            pressedKeys.Remove(key) |> ignore
         )
     
     let sharedAssets = AssetManager(typeof<AssetManager>.Assembly)
@@ -117,6 +132,9 @@ window.add_Load(fun _ ->
     shaderProgram.SetUniform("texture2", 1)
                             
     window.add_Render(fun deltaTime ->
+        pressedKeys.Values
+        |> Seq.iter (fun f -> f(float32 deltaTime))
+        
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
@@ -125,11 +143,8 @@ window.add_Load(fun _ ->
         texture2.Bind(TextureUnit.Texture1)
         shaderProgram.Use()
         
-        let view = {
-            Transform.Identity with
-                Position = Vector3(0.0f, 0.f, -5.f)
-        }
-        shaderProgram.SetUniform("view", view.ViewMatrix)
+        let view = Matrix4x4.CreateLookAt(cameraPos, cameraPos + cameraFront, cameraUp)
+        shaderProgram.SetUniform("view", view)
         let projection =
             let aspectRatio = float32(window.Size.X) / float32(window.Size.Y)
             Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.degreesToRadians 45f, aspectRatio, 0.1f, 100f)

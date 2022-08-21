@@ -1,6 +1,7 @@
 module SuperSDG.MapRenderer
 
 open System
+open System.Numerics
 open Silk.NET.OpenGL
 open SuperSDG.Engine
 open SuperSDG.MapGenerator
@@ -70,20 +71,54 @@ type WorldRenderer (gl:GL, assets:AssetManager) =
     do  floorVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
         floorVao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3)
         
+    let wallTexture = assets.LoadTexture "wall.jpeg"
+    let wallShaderProgram = assets.LoadShaderProgram("wall.vert", "wall.frag")
+    do  wallShaderProgram.Use()
+        wallShaderProgram.SetUniform("texture1", 0)
+    
+    let wallVbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, Data.cubeVertices)   
+    let wallVao = VertexArrayObject.Create(gl, wallVbo)
+    do  wallVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+        wallVao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3) 
+        
     let resources: IDisposable[] =
-        [|floorTexture; floorShaderProgram; floorVbo; floorVao|]
+        [|floorTexture; floorShaderProgram; floorVbo; floorVao
+          wallTexture; wallShaderProgram; wallVbo; wallVao|]
         
     member _.Render(map:WordMap, camera:Camera) =
         floorTexture.Bind(TextureUnit.Texture0)
         floorShaderProgram.Use()
         
         floorShaderProgram.SetUniform("view", camera.GetViewMatrix())
-        let model = { Transform.Identity with Scale = float32 <| map.Map.GetLength(0) }
+        let model = {
+            Transform.Identity with
+                Scale = float32 <| map.Map.GetLength(0)
+                Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathH.radians 180f)
+        }
         floorShaderProgram.SetUniform("model", model.ViewMatrix)
         floorShaderProgram.SetUniform("projection", camera.GetProjectionMatrix())
         
         floorVao.Bind()
         gl.DrawArrays(GLEnum.Triangles, 0, 6u)
+        
+        wallTexture.Bind(TextureUnit.Texture0)
+        wallShaderProgram.Use()
+        
+        floorShaderProgram.SetUniform("view", camera.GetViewMatrix())
+        floorShaderProgram.SetUniform("projection", camera.GetProjectionMatrix())
+        
+        wallVao.Bind()
+        
+        map.Map
+        |>Array2D.iteri(fun x y c ->
+            if c = '#' then
+                let model = {
+                    Transform.Identity with
+                        Position = Vector3(float32(x)+0.5f, 0.5f, float32(-y)-0.5f)
+                }
+                wallShaderProgram.SetUniform("model", model.ViewMatrix)
+                gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        )
 
         
     interface IDisposable with

@@ -26,10 +26,10 @@ let window = Window.Create options
 window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
 
-    let mutable cameraPos = Vector3(0.0f, 0.0f,  3.0f);
-    let cameraFront = Vector3(0.0f, 0.0f, -1.0f);
-    let cameraUp    = Vector3(0.0f, 1.0f,  0.0f)
-    let cameraSpeed = 2.5f
+    let mutable camera = {
+        Camera2.Default with
+            Position = Vector3(0.0f, 0.0f,  3.0f)
+    }
     
     let input = window.CreateInput()
     let pressedKeys = Collections.Generic.Dictionary<Key, float32 -> unit>()
@@ -37,10 +37,20 @@ window.add_Load(fun _ ->
         keyboard.add_KeyDown(fun keyboard key _ ->
             match key with 
             | Key.Escape -> window.Close()
-            | Key.W -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos + cameraFront * cameraSpeed * dt)
-            | Key.S -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos - cameraFront * cameraSpeed * dt)
-            | Key.A -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos - Vector3.Normalize(Vector3.Cross(cameraFront, cameraUp)) * cameraSpeed * dt)
-            | Key.D -> pressedKeys.Add(key, fun dt -> cameraPos <- cameraPos + Vector3.Normalize(Vector3.Cross(cameraFront, cameraUp)) * cameraSpeed * dt)
+            | Key.F ->
+                window.WindowState <-
+                    if window.WindowState = WindowState.Fullscreen
+                    then WindowState.Normal else WindowState.Fullscreen
+            | Key.W | Key.A | Key.S | Key.D ->
+                let moveDirection =
+                     match key with
+                     | Key.W -> CameraMovement.Forward
+                     | Key.S -> CameraMovement.Backward
+                     | Key.A -> CameraMovement.Left
+                     | Key.D -> CameraMovement.Right
+                pressedKeys.Add(key, fun deltaTime ->
+                    camera <- camera.ProcessKeyboard(moveDirection, deltaTime)
+                )
             | _ -> ()
         )
         keyboard.add_KeyUp(fun keyboard key _ ->
@@ -143,11 +153,10 @@ window.add_Load(fun _ ->
         texture2.Bind(TextureUnit.Texture1)
         shaderProgram.Use()
         
-        let view = Matrix4x4.CreateLookAt(cameraPos, cameraPos + cameraFront, cameraUp)
-        shaderProgram.SetUniform("view", view)
+        shaderProgram.SetUniform("view", camera.GetViewMatrix())
         let projection =
             let aspectRatio = float32(window.Size.X) / float32(window.Size.Y)
-            Matrix4x4.CreatePerspectiveFieldOfView(MathHelper.degreesToRadians 45f, aspectRatio, 0.1f, 100f)
+            camera.GetProjectionMatrix(aspectRatio)
         shaderProgram.SetUniform("projection", projection)
         
         vao.Bind()
@@ -163,7 +172,7 @@ window.add_Load(fun _ ->
                     Position = cubePos
                     Rotation = Quaternion.CreateFromAxisAngle(
                         Vector3(1.0f, 0.3f, 0.5f),
-                        MathHelper.degreesToRadians(float32 angle))
+                        MathH.radians(float32 angle))
             }
             shaderProgram.SetUniform("model", model.ViewMatrix)
             gl.DrawArrays(GLEnum.Triangles, 0, 36u)

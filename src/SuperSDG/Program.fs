@@ -70,33 +70,34 @@ window.add_Load(fun _ ->
     let primaryKeyboard = input.Keyboards.Item(0)
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
-            if key = Key.Escape then window.Close()
+            match key with 
+            | Key.Escape -> window.Close()
+            | Key.F ->
+                window.WindowState <-
+                    if window.WindowState = WindowState.Fullscreen
+                    then WindowState.Normal else WindowState.Fullscreen
+            | _ -> ()
         )
 
-    let mutable LastMousePosition = Vector2.Zero
     //Start a camera at position 3 on the Z axis, looking at position -1 on the Z axis
     let mutable camera =
-        { Camera.Default with
+        { ClassicCamera.Default with
             Position = Vector3.Multiply(Vector3.UnitZ, 6f)
-            Front = Vector3.Multiply(Vector3.UnitZ, -1f)
-            Up = Vector3.UnitY
-            AspectRatio = (float32 Width) / (float32 Height) }
+            AspectRatio = float32(window.Size.X) / float32(window.Size.Y)}
 
+    let mutable lastMousePosition = None
     for mice in input.Mice do
         //mice.Cursor.CursorMode <- CursorMode.Raw
         mice.add_MouseMove(fun mouse position ->
-            let lookSensitivity = 0.1f
-            if LastMousePosition = Vector2.Zero
-            then LastMousePosition <- position
-            else
-                let xOffset = (position.X - LastMousePosition.X) * lookSensitivity
-                let yOffset = (position.Y - LastMousePosition.Y) * lookSensitivity
-                LastMousePosition <- position
-
-                camera <- camera.ModifyDirection(xOffset, yOffset);
+            match lastMousePosition with
+            | None -> lastMousePosition <- Some position
+            | Some(lastPosition) ->
+                let delta = position - lastPosition
+                camera <- camera.ProcessMouseMovement(delta.X, delta.Y)
+                lastMousePosition <- Some(position)
         )
         mice.add_Scroll(fun mouse scrollWheel ->
-            camera <- camera.ModifyZoom(scrollWheel.Y);
+            camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
 
     let assets = AssetManager(Assembly.GetExecutingAssembly())
@@ -131,16 +132,14 @@ window.add_Load(fun _ ->
     disposables.AddRange([lightingShader; lampShader; diffuseMap; specularMap])
 
     window.add_Update(fun deltaTime ->
-        let moveSpeed = 2.5f * (float32 deltaTime)
-
-        if primaryKeyboard.IsKeyPressed(Key.W)
-        then camera <- { camera with Position = camera.Position + moveSpeed * camera.Front }
-        if primaryKeyboard.IsKeyPressed(Key.S)
-        then camera <- { camera with Position = camera.Position - moveSpeed * camera.Front }
-        if primaryKeyboard.IsKeyPressed(Key.A)
-        then camera <- { camera with Position = camera.Position - Vector3.Normalize(Vector3.Cross(camera.Front, camera.Up)) * moveSpeed }
-        if primaryKeyboard.IsKeyPressed(Key.D)
-        then camera <- { camera with Position = camera.Position + Vector3.Normalize(Vector3.Cross(camera.Front, camera.Up)) * moveSpeed }
+        if primaryKeyboard.IsKeyPressed(Key.W) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Forward, float32 deltaTime)
+        if primaryKeyboard.IsKeyPressed(Key.S) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Backward, float32 deltaTime)
+        if primaryKeyboard.IsKeyPressed(Key.A) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Left, float32 deltaTime)
+        if primaryKeyboard.IsKeyPressed(Key.D) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Right, float32 deltaTime)
     )
 
     window.add_Render(fun deltaTime ->
@@ -198,6 +197,10 @@ window.add_Load(fun _ ->
             gl.DrawArrays(PrimitiveType.Triangles, 0, 36u);
     )
 
+    window.add_Resize(fun size ->
+        let aspectRation = float32(size.X) / float32(size.Y)
+        camera <- { camera with AspectRatio = aspectRation }
+    )
     window.add_Closing(fun _ ->
         disposables
         |> Seq.rev

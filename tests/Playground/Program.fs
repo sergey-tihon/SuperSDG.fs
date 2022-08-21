@@ -1,5 +1,4 @@
 ﻿open System
-open System.IO
 open System.Numerics
 open System.Reflection
 open Silk.NET.Maths
@@ -20,20 +19,20 @@ options.API <- GraphicsAPI(
     ContextFlags.ForwardCompatible, // Required for macOS
     APIVersion(3, 3) // Default is 3.3 (4.1 is max version on macOS)
 )
-//options.WindowState <- WindowState.Fullscreen
 
 let window = Window.Create options
 window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
 
     let mutable camera = {
-        Camera2.Default with
+        ClassicCamera.Default with
             Position = Vector3(0.0f, 0.0f,  3.0f)
             MouseSensitivity = 0.1f
+            AspectRatio = float32(window.Size.X) / float32(window.Size.Y)
     }
     
     let input = window.CreateInput()
-    let pressedKeys = Collections.Generic.Dictionary<Key, float32 -> unit>()
+    let primaryKeyboard = input.Keyboards.Item(0)
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
             match key with 
@@ -42,20 +41,7 @@ window.add_Load(fun _ ->
                 window.WindowState <-
                     if window.WindowState = WindowState.Fullscreen
                     then WindowState.Normal else WindowState.Fullscreen
-            | Key.W | Key.A | Key.S | Key.D ->
-                let moveDirection =
-                     match key with
-                     | Key.W -> CameraMovement.Forward
-                     | Key.S -> CameraMovement.Backward
-                     | Key.A -> CameraMovement.Left
-                     | Key.D -> CameraMovement.Right
-                pressedKeys.Add(key, fun deltaTime ->
-                    camera <- camera.ProcessKeyboard(moveDirection, deltaTime)
-                )
             | _ -> ()
-        )
-        keyboard.add_KeyUp(fun keyboard key _ ->
-            pressedKeys.Remove(key) |> ignore
         )
         
     let mutable lastMousePosition = None    
@@ -156,10 +142,17 @@ window.add_Load(fun _ ->
     shaderProgram.SetUniform("texture1", 0)
     shaderProgram.SetUniform("texture2", 1)
                             
+    window.add_Update(fun deltaTime ->
+        if primaryKeyboard.IsKeyPressed(Key.W) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Forward, float32 deltaTime)
+        if primaryKeyboard.IsKeyPressed(Key.S) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Backward, float32 deltaTime)
+        if primaryKeyboard.IsKeyPressed(Key.A) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Left, float32 deltaTime)
+        if primaryKeyboard.IsKeyPressed(Key.D) then
+            camera <- camera.ProcessKeyboard(CameraMovement.Right, float32 deltaTime)
+    )                        
     window.add_Render(fun deltaTime ->
-        pressedKeys.Values
-        |> Seq.iter (fun f -> f(float32 deltaTime))
-        
         gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
@@ -169,10 +162,7 @@ window.add_Load(fun _ ->
         shaderProgram.Use()
         
         shaderProgram.SetUniform("view", camera.GetViewMatrix())
-        let projection =
-            let aspectRatio = float32(window.Size.X) / float32(window.Size.Y)
-            camera.GetProjectionMatrix(aspectRatio)
-        shaderProgram.SetUniform("projection", projection)
+        shaderProgram.SetUniform("projection", camera.GetProjectionMatrix())
         
         vao.Bind()
         
@@ -195,6 +185,10 @@ window.add_Load(fun _ ->
         //gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
     )
     
+    window.add_Resize(fun size ->
+        let aspectRation = float32(size.X) / float32(size.Y)
+        camera <- { camera with AspectRatio = aspectRation }
+    )
     window.add_Closing(fun _ ->
         disposables
         |> Seq.rev

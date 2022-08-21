@@ -7,6 +7,8 @@ open Silk.NET.OpenGL
 open SixLabors.ImageSharp
 open SixLabors.ImageSharp.PixelFormats
 
+#nowarn "9"
+
 type Texture(gl:GL, handle:uint32) =
     member _.Bind (?textureSlot: TextureUnit) =
         let textureSlot' = defaultArg textureSlot TextureUnit.Texture0

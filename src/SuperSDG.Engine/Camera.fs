@@ -7,73 +7,37 @@ module MathH =
     let radians degrees =
         degrees * MathF.PI / 180f
 
-type Camera =
-    {
-        Position : Vector3
-        Front : Vector3
-        Up : Vector3
-        AspectRatio : float32
-        Yaw : float32
-        Pitch : float32
-        Zoom : float32
-    }
-    static member Default =
-        {
-            Position = Vector3.Zero
-            Front = Vector3.Zero
-            Up = Vector3.Zero
-            AspectRatio = 0f
-            Yaw = -90f
-            Pitch = 0f
-            Zoom = 45f
-        }
-    member this.ModifyZoom(zoomAmount) =
-        //We don't want to be able to zoom in too close or too far away so clamp to these values
-        { this with Zoom = Math.Clamp(this.Zoom - zoomAmount, 1.0f, 45f) }
-    member this.ModifyDirection(xOffset:float32, yOffset:float32) =
-        let yaw = this.Yaw + xOffset
-        let pitch = this.Pitch - yOffset
-        //We don't want to be able to look behind us by going over our head or under our feet so make sure it stays within these bounds
-        let pitch = Math.Clamp(pitch, -89f, 89f)
-        let cameraDirection = Vector3(
-            MathF.Cos(MathH.radians(yaw)) * MathF.Cos(MathH.radians(pitch)),
-            MathF.Sin(MathH.radians(pitch)),
-            MathF.Sin(MathH.radians(yaw)) * MathF.Cos(MathH.radians(pitch));
-        )
-        { this with Yaw = yaw; Pitch = pitch; Front = Vector3.Normalize(cameraDirection) }
-    member this.GetViewMatrix() =
-        Matrix4x4.CreateLookAt(this.Position, this.Position + this.Front, this.Up)
-    member this.GetProjectionMatrix() =
-        Matrix4x4.CreatePerspectiveFieldOfView(MathH.radians(this.Zoom), this.AspectRatio, 0.1f, 100.0f)
-
 type CameraMovement =
     | Forward
     | Backward
     | Left
     | Right
     
-type Camera2 =
+type ClassicCamera =
     {
-        // camera Attributes
+        // camera attributes
         Position : Vector3
         WorldUp: Vector3
-        // euler Angles
+        // euler angles
         Yaw : float32
         Pitch : float32
+        // view options
+        Zoom : float32 // view angle
+        AspectRatio: float32
         // camera options
         MovementSpeed: float32
         MouseSensitivity: float32
-        Zoom : float32 // view angle
     }
-    static member Default: Camera2 =
+    static member Default: ClassicCamera =
         {
             Position = Vector3.Zero
             WorldUp = Vector3.UnitY
             Yaw = -90f
             Pitch = 0f
+            Zoom = 45f
+            AspectRatio =  16f / 9f
             MovementSpeed = 2.5f
             MouseSensitivity = 0.1f
-            Zoom = 45f
         }
         
     member this.Front =
@@ -90,8 +54,8 @@ type Camera2 =
 
     member this.GetViewMatrix() =
         Matrix4x4.CreateLookAt(this.Position, this.Position + this.Front, this.Up)
-    member this.GetProjectionMatrix(aspectRatio) =
-        Matrix4x4.CreatePerspectiveFieldOfView(MathH.radians(this.Zoom), aspectRatio, 0.1f, 100.0f)
+    member this.GetProjectionMatrix() =
+        Matrix4x4.CreatePerspectiveFieldOfView(MathH.radians(this.Zoom), this.AspectRatio, 0.1f, 100.0f)
 
         
     member this.ProcessKeyboard(direction:CameraMovement, deltaTime:float32) =

@@ -13,7 +13,7 @@ type CameraMovement =
     | Left
     | Right
     
-type ClassicCamera =
+type Camera =
     {
         // camera attributes
         Position : Vector3
@@ -28,7 +28,7 @@ type ClassicCamera =
         MovementSpeed: float32
         MouseSensitivity: float32
     }
-    static member Default: ClassicCamera =
+    static member Default =
         {
             Position = Vector3.Zero
             WorldUp = Vector3.UnitY

@@ -25,7 +25,7 @@ window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
 
     let mutable camera = {
-        ClassicCamera.Default with
+        Camera.Default with
             Position = Vector3(0.0f, 0.0f,  3.0f)
             MouseSensitivity = 0.1f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)
@@ -58,66 +58,19 @@ window.add_Load(fun _ ->
             camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
     
-    let sharedAssets = AssetManager(typeof<AssetManager>.Assembly)
-    let assets = AssetManager(Assembly.GetExecutingAssembly())
         
     let gl = GL.GetApi(window)
+    let sharedAssets = AssetManager(gl, typeof<AssetManager>.Assembly)
+    let assets = AssetManager(gl, Assembly.GetExecutingAssembly())
+
     gl.Enable(GLEnum.DepthTest)
     disposables.AddRange([input; gl])
     
-    let shaderProgram = Shader.Create(gl,
-        assets.LoadEmbeddedText "Shader.vert",
-        assets.LoadEmbeddedText "Shader.frag")
-    let loadTexture name =
-        use stream = sharedAssets.LoadEmbeddedStream name
-        Texture.Load(gl, stream)
-    let texture1 = loadTexture "floor.jpeg"
-    let texture2 = loadTexture "wall.jpeg"
+    let shaderProgram = assets.LoadShaderProgram("Shader.vert", "Shader.frag")
+    let texture1 = sharedAssets.LoadTexture "floor.jpeg"
+    let texture2 = sharedAssets.LoadTexture "wall.jpeg"
     disposables.AddRange([shaderProgram; texture1; texture2])
     
-    let vertices = [|
-        -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
-         0.5f; -0.5f; -0.5f;  1.0f; 0.0f;
-         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-        -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
-        -0.5f; -0.5f; -0.5f;  0.0f; 0.0f;
-
-        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-         0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
-         0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
-         0.5f;  0.5f;  0.5f;  1.0f; 1.0f;
-        -0.5f;  0.5f;  0.5f;  0.0f; 1.0f;
-        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-
-        -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-        -0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-        -0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-
-         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-         0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-         0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-         0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-
-        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-         0.5f; -0.5f; -0.5f;  1.0f; 1.0f;
-         0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
-         0.5f; -0.5f;  0.5f;  1.0f; 0.0f;
-        -0.5f; -0.5f;  0.5f;  0.0f; 0.0f;
-        -0.5f; -0.5f; -0.5f;  0.0f; 1.0f;
-
-        -0.5f;  0.5f; -0.5f;  0.0f; 1.0f;
-         0.5f;  0.5f; -0.5f;  1.0f; 1.0f;
-         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-         0.5f;  0.5f;  0.5f;  1.0f; 0.0f;
-        -0.5f;  0.5f;  0.5f;  0.0f; 0.0f;
-        -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
-    |]
     let cubePositions = [|
         Vector3( 0.0f,  0.0f,  0.0f);
         Vector3( 2.0f,  5.0f, -15.0f);
@@ -130,7 +83,7 @@ window.add_Load(fun _ ->
         Vector3( 1.5f,  0.2f, -1.5f);
         Vector3(-1.3f,  1.0f, -1.5f)
     |]
-    let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, vertices)
+    let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, MapRenderer.Data.cubeVertices)
     
     let vao = VertexArrayObject.Create(gl, vbo)
     vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)

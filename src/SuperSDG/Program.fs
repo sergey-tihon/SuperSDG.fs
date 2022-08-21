@@ -81,8 +81,10 @@ window.add_Load(fun _ ->
 
     //Start a camera at position 3 on the Z axis, looking at position -1 on the Z axis
     let mutable camera =
-        { ClassicCamera.Default with
-            Position = Vector3.Multiply(Vector3.UnitZ, 6f)
+        { Camera.Default with
+            Position = Vector3(0f, 5f, -5f)
+            Pitch = -45f
+            Yaw = 90f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)}
 
     let mutable lastMousePosition = None
@@ -100,8 +102,8 @@ window.add_Load(fun _ ->
             camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
 
-    let assets = AssetManager(Assembly.GetExecutingAssembly())
     let gl = GL.GetApi(window)
+    let assets = AssetManager(gl, Assembly.GetExecutingAssembly())
     gl.Enable(EnableCap.DepthTest)
     gl.DepthFunc(DepthFunction.Less)
 
@@ -119,17 +121,18 @@ window.add_Load(fun _ ->
     VaoCube.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
 
     //The lighting shader will give our main cube it's colour multiplied by the lights intensity
-    let lightingShader = Shader.Create(gl, assets.LoadEmbeddedText "Shader.vert", assets.LoadEmbeddedText  "lighting.frag")
+    let lightingShader = assets.LoadShaderProgram("Shader.vert","lighting.frag")
     //The Lamp shader uses a fragment shader that just colours it solid white so that we know it is the light source
-    let lampShader = Shader.Create(gl, assets.LoadEmbeddedText "Shader.vert", assets.LoadEmbeddedText  "Shader.frag")
+    let lampShader = assets.LoadShaderProgram("Shader.vert", "Shader.frag")
     let lampPosition = Vector3(1.2f, 1.0f, 2.0f)
 
-    let loadTexture name =
-        use stream = assets.LoadEmbeddedStream name
-        Texture.Load(gl, stream)
-    let diffuseMap = loadTexture "floor.jpeg"
-    let specularMap = loadTexture "wall.jpeg"
+    let diffuseMap = assets.LoadTexture "wall.jpeg"
+    let specularMap = assets.LoadTexture "floor.jpeg"    
     disposables.AddRange([lightingShader; lampShader; diffuseMap; specularMap])
+    
+    let map = MapGenerator.createMap 40 40
+    let renderer = new MapRenderer.WorldRenderer(gl, assets)
+    disposables.AddRange([renderer])
 
     window.add_Update(fun deltaTime ->
         if primaryKeyboard.IsKeyPressed(Key.W) then
@@ -194,7 +197,9 @@ window.add_Load(fun _ ->
             lampShader.SetUniform("uView", camera.GetViewMatrix())
             lampShader.SetUniform("uProjection", camera.GetProjectionMatrix())
 
-            gl.DrawArrays(PrimitiveType.Triangles, 0, 36u);
+            gl.DrawArrays(PrimitiveType.Triangles, 0, 36u)
+            
+        renderer.Render(map, camera)
     )
 
     window.add_Resize(fun size ->

@@ -7,12 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="Resources\floor.frag" />
+        <EmbeddedResource Include="Resources\floor.vert" />
         <EmbeddedResource Include="Resources\Shader.frag" />
         <EmbeddedResource Include="Resources\Shader.vert" />
         <EmbeddedResource Include="Resources\floor.jpeg" />
         <EmbeddedResource Include="Resources\wall.jpeg" />
         <EmbeddedResource Include="Resources\lighting.frag" />
         <Compile Include="AssetManager.fs" />
+        <Compile Include="MapGenerator.fs" />
+        <Compile Include="MapRenderer.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

@@ -36,8 +36,8 @@ type Camera =
             Pitch = 0f
             Zoom = 45f
             AspectRatio =  16f / 9f
-            MovementSpeed = 2.5f
-            MouseSensitivity = 0.1f
+            MovementSpeed = 10f
+            MouseSensitivity = 0.3f
         }
         
     member this.Front =

@@ -11,7 +11,7 @@ open SuperSDG.Engine
 let mutable options = WindowOptions.Default
 options.Size <- Vector2D<int>(1280, 720)
 options.PreferredDepthBufferBits <- 24
-options.Title <- "SuperSDG v3"
+options.Title <- "SuperSDG 3"
 
 let window = Window.Create options
 window.add_Load(fun _ ->

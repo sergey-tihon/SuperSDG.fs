@@ -29,6 +29,7 @@ window.add_Load(fun _ ->
     let mutable camera = {
         Camera2.Default with
             Position = Vector3(0.0f, 0.0f,  3.0f)
+            MouseSensitivity = 0.1f
     }
     
     let input = window.CreateInput()
@@ -55,6 +56,20 @@ window.add_Load(fun _ ->
         )
         keyboard.add_KeyUp(fun keyboard key _ ->
             pressedKeys.Remove(key) |> ignore
+        )
+        
+    let mutable lastMousePosition = None    
+    for mice in input.Mice do
+        mice.add_MouseMove(fun mouse position ->
+            match lastMousePosition with
+            | None -> lastMousePosition <- Some position
+            | Some(lastPosition) ->
+                let delta = position - lastPosition
+                camera <- camera.ProcessMouseMovement(delta.X, delta.Y)
+                lastMousePosition <- Some(position)
+        )
+        mice.add_Scroll(fun mouse scrollWheel ->
+            camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
     
     let sharedAssets = AssetManager(typeof<AssetManager>.Assembly)

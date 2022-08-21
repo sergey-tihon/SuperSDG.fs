@@ -66,8 +66,6 @@ options.Title <- "SuperSDG v3"
 
 let window = Window.Create options
 window.add_Load(fun _ ->
-    let startTime = DateTime.UtcNow
-
     let input = window.CreateInput()
     let primaryKeyboard = input.Keyboards.Item(0)
     for keyboard in input.Keyboards do

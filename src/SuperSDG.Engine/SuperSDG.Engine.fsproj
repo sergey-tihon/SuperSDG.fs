@@ -10,7 +10,7 @@
         <Compile Include="Shader.fs" />
         <Compile Include="Texture.fs" />
         <Compile Include="Transform.fs" />
-        <Compile Include="Camera.fs" />
+        <Compile Include="Cameras.fs" />
     </ItemGroup>
 
     <ItemGroup>

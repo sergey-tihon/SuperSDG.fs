@@ -25,7 +25,7 @@ window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
 
     let mutable camera = {
-        Camera.Default with
+        FreeCamera.Default with
             Position = Vector3(0.0f, 0.0f,  3.0f)
             MouseSensitivity = 0.1f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)

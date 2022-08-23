@@ -85,7 +85,7 @@ type WorldRenderer (gl:GL, assets:AssetManager) =
         [|floorTexture; floorShaderProgram; floorVbo; floorVao
           wallTexture; wallShaderProgram; wallVbo; wallVao|]
         
-    member _.Render(map:WordMap, camera:Camera) =
+    member _.Render(map:WordMap, camera:ICamera) =
         floorTexture.Bind(TextureUnit.Texture0)
         floorShaderProgram.Use()
         

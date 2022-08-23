@@ -30,8 +30,9 @@ window.add_Load(fun _ ->
 
     //Start a camera at position 3 on the Z axis, looking at position -1 on the Z axis
     let mutable camera =
-        { Camera.Default with
-            Position = Vector3(0f, 10f, 5f)
+        { FollowCamera.Default with
+            CameraTarget = Vector3(20.5f, 0.5f, -20.5f)
+            Distance = 15.0f
             Pitch = -45f
             Yaw = -60f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)}
@@ -63,16 +64,16 @@ window.add_Load(fun _ ->
     let renderer = new MapRenderer.WorldRenderer(gl, assets)
     disposables.AddRange([renderer])
 
-    window.add_Update(fun deltaTime ->
-        if primaryKeyboard.IsKeyPressed(Key.W) then
-            camera <- camera.ProcessKeyboard(CameraMovement.Forward, float32 deltaTime)
-        if primaryKeyboard.IsKeyPressed(Key.S) then
-            camera <- camera.ProcessKeyboard(CameraMovement.Backward, float32 deltaTime)
-        if primaryKeyboard.IsKeyPressed(Key.A) then
-            camera <- camera.ProcessKeyboard(CameraMovement.Left, float32 deltaTime)
-        if primaryKeyboard.IsKeyPressed(Key.D) then
-            camera <- camera.ProcessKeyboard(CameraMovement.Right, float32 deltaTime)
-    )
+    // window.add_Update(fun deltaTime ->
+    //     if primaryKeyboard.IsKeyPressed(Key.W) then
+    //         camera <- camera.ProcessKeyboard(CameraMovement.Forward, float32 deltaTime)
+    //     if primaryKeyboard.IsKeyPressed(Key.S) then
+    //         camera <- camera.ProcessKeyboard(CameraMovement.Backward, float32 deltaTime)
+    //     if primaryKeyboard.IsKeyPressed(Key.A) then
+    //         camera <- camera.ProcessKeyboard(CameraMovement.Left, float32 deltaTime)
+    //     if primaryKeyboard.IsKeyPressed(Key.D) then
+    //         camera <- camera.ProcessKeyboard(CameraMovement.Right, float32 deltaTime)
+    // )
 
     window.add_Render(fun deltaTime ->
         gl.Enable(EnableCap.DepthTest)

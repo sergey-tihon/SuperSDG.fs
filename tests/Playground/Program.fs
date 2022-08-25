@@ -114,8 +114,9 @@ window.add_Load(fun _ ->
         texture2.Bind(TextureUnit.Texture1)
         shaderProgram.Use()
         
-        shaderProgram.SetUniform("view", camera.GetViewMatrix())
-        shaderProgram.SetUniform("projection", camera.GetProjectionMatrix())
+        let icam = camera :> ICamera
+        shaderProgram.SetUniform("view", icam.GetViewMatrix())
+        shaderProgram.SetUniform("projection", icam.GetProjectionMatrix())
         
         vao.Bind()
         

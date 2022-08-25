@@ -1,10 +1,44 @@
 module SuperSDG.MapGenerator
 
 open System
+open Silk.NET.Maths
 
 type WordMap = {
     Map: char[,]
+    Player: Vector2D<int>
+    Exit: Vector2D<int>
 }
+
+module Mover =
+    open SuperSDG.Engine
+    open System.Numerics
+    
+    let private moveVectors = [
+        Vector2D(-1,0)  // Forward
+        Vector2D(0,1)   // Right
+        Vector2D(1, 0)  // Backward
+        Vector2D(0, -1) // Left
+    ]
+    let private getDirectionOffset = function
+        | Forward -> 0
+        | Right -> 1
+        | Backward -> 2
+        | Left -> 3
+        
+    let private moveVectorsF =
+        moveVectors |> List.map (fun v -> Vector2(float32 v.X, float32 v.Y))
+        
+    let private getCurrentForward (front:Vector3) =
+        let front = Vector2(front.X, -front.Z)
+        moveVectorsF
+        |> List.mapi (fun i v -> i, Vector2.Dot(front, v))
+        |> List.maxBy snd
+        |> fst
+        
+    let getDirection front direction =
+        let currentForward = getCurrentForward front
+        let offset = getDirectionOffset direction
+        moveVectors[(currentForward + offset) % 4]
 
 let private createEmptyMapWithBorder size =
     Array2D.init size size (fun i j ->
@@ -73,4 +107,8 @@ let private generateWalls (map:char[,]) seed wallCount =
 let createMap size seed =
     let map = createEmptyMapWithBorder (size+2)
     generateWalls map seed (size * size * 2 / 5)
-    { Map = map }
+    {
+        Map = map
+        Player = Vector2D<int>(1, 1)
+        Exit = Vector2D<int>(size, size)
+    }

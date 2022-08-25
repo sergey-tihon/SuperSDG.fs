@@ -2,6 +2,7 @@ module SuperSDG.MapRenderer
 
 open System
 open System.Numerics
+open Silk.NET.Maths
 open Silk.NET.OpenGL
 open SuperSDG.Engine
 open SuperSDG.MapGenerator
@@ -60,6 +61,9 @@ module Data =
         -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
     |]
 
+let to3D(target:Vector2D<int>) =
+    Vector3(0.5f + float32(target.X), 0.5f, -float32(target.Y)-0.5f)
+    
 type WorldRenderer (gl:GL, assets:AssetManager) =
     let floorTexture = assets.LoadTexture "floor.jpeg"
     let floorShaderProgram = assets.LoadShaderProgram("floor.vert", "floor.frag")
@@ -114,11 +118,20 @@ type WorldRenderer (gl:GL, assets:AssetManager) =
             if c = '#' then
                 let model = {
                     Transform.Identity with
-                        Position = Vector3(float32(x)+0.5f, 0.5f, float32(-y)-0.5f)
+                        Position = Vector2D(x, y) |> to3D
                 }
                 wallShaderProgram.SetUniform("model", model.ViewMatrix)
                 gl.DrawArrays(GLEnum.Triangles, 0, 36u)
         )
+        
+        // player
+        let model = {
+            Transform.Identity with
+                Position = map.Player |> to3D
+                Rotation = Quaternion.CreateFromYawPitchRoll(MathH.radians 45f, MathH.radians 45f, MathH.radians 0f)
+        }
+        wallShaderProgram.SetUniform("model", model.ViewMatrix)
+        gl.DrawArrays(GLEnum.Triangles, 0, 36u)
 
         
     interface IDisposable with

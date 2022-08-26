@@ -46,24 +46,20 @@ module Mover =
         let currentForward = getCurrentForward front
         let offset = getDirectionOffset direction
         moveVectors[(currentForward + offset) % 4]
-
-let private createEmptyMapWithBorder size =
-    Array2D.init size size (fun i j ->
-        if i = 0 || j = 0 || i = size - 1 || j = size - 1
-        then '#'
-        else '.'
-    )
     
-let private generateWalls (map:char[,]) seed wallCount =
-    let rand = Random(seed)
+let private generateWalls size (rand:Random) wallCount =
+    let isBorder i j = i = 0 || j = 0 || i = size - 1 || j = size - 1
+    let map = Array2D.init size size (fun i j ->
+        if isBorder i j then '#' else '.')
     let l1, l2 = map.GetLength(0), map.GetLength(1)
     
     let dir = [-1,0; 0,-1; 1,0; 0,1]
-    let getNeighbor (map:char[,]) x y =
-        dir |> List.map (fun (dx, dy) -> x+dx, y+dy)
+    let getNeighbor x y =
+        dir
+        |> List.map (fun (dx, dy) -> x+dx, y+dy)
         |> List.filter (fun (x, y) -> 0<=x && x<l1 && 0<=y && y<l2)
     let countNeighbors (map:char[,]) x y =
-        getNeighbor map x y
+        getNeighbor x y
         |> List.filter (fun (x, y) -> map[x, y] = '#')
         |> List.length
         
@@ -71,7 +67,7 @@ let private generateWalls (map:char[,]) seed wallCount =
         let m = Array2D.init l1 l2 (fun i j -> map[i,j])
         m[x,y] <- '#'
         let isBusyNeighbor =
-            getNeighbor m x y
+            getNeighbor x y
             |> List.map (fun (x, y) -> countNeighbors m x y)
             |> List.exists (fun n -> n > 3)
         if isBusyNeighbor || countNeighbors m x y > 3
@@ -80,7 +76,7 @@ let private generateWalls (map:char[,]) seed wallCount =
             let mutable zones = 0
             let rec fill x y =
                 m[x,y] <- '#'
-                getNeighbor m x y
+                getNeighbor x y
                 |> List.iter (fun (x, y) -> if m[x,y] = '.' then fill x y)
             m |> Array2D.iteri (fun x y c ->
                 if c = '.' then
@@ -101,8 +97,8 @@ let private generateWalls (map:char[,]) seed wallCount =
     loop wallCount
         
     map |> Array2D.iteri (fun i j c ->
-        if c = '#' then
-            if countNeighbors map i j > 3
+        if c = '#' && not(isBorder i j) then
+            if countNeighbors map i j >= 3
             then map[i, j] <- '.'
     )
     map |> Array2D.iteri (fun i j c ->
@@ -110,13 +106,21 @@ let private generateWalls (map:char[,]) seed wallCount =
             if countNeighbors map i j < 2 && isGoodPosition i j
             then map[i, j] <- '#'
     )
+    map
+    
+let rec private pickStart (map:char[,]) (rand:Random) =
+    let x = rand.Next(map.GetLength(0))
+    let y = rand.Next(map.GetLength(1))
+    if map[x,y] = '.' then Vector2D(x,y)
+    else pickStart map rand
     
 let createMap size seed =
-    let map = createEmptyMapWithBorder (size+2)
-    generateWalls map seed (size * size * 2 / 5)
+    let rand = Random(seed)
+    let map = generateWalls (size+2) rand (size * size * 2 / 5)
+    let start = pickStart map rand
     {
         Map = map
         Exit2 = Vector2D<int>(size, size)
-        Player2 = Vector2D<int>(1, 1)
-        Player3 = to3D(Vector2D<int>(1, 1))
+        Player2 = start
+        Player3 = to3D(start)
     }

@@ -20,8 +20,8 @@ window.add_Load(fun _ ->
         { FollowCamera.Default with
             CameraTarget = map.Player3
             Distance = 15.0f
-            Pitch = -45f
-            Yaw = -60f
+            Pitch = -89f
+            Yaw = -0f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)
         }
     

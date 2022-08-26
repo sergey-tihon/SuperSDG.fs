@@ -90,6 +90,7 @@ type FollowCamera =
         // camera options
         Zoom : float32 // view angle
         AspectRatio: float32
+        MovementSpeed: float32
         MouseSensitivity: float32
     }
     static member Default =
@@ -103,6 +104,7 @@ type FollowCamera =
 
             Zoom = 45f
             AspectRatio =  16f / 9f
+            MovementSpeed = 10f
             MouseSensitivity = 0.3f
         }
 

@@ -60,9 +60,6 @@ module Data =
         -0.5f;  0.5f;  0.5f;  0.0f; 0.0f;
         -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
     |]
-
-let to3D(target:Vector2D<int>) =
-    Vector3(0.5f + float32(target.X), 0.5f, -float32(target.Y)-0.5f)
     
 type WorldRenderer (gl:GL, assets:AssetManager) =
     let floorTexture = assets.LoadTexture "floor.jpeg"
@@ -87,8 +84,8 @@ type WorldRenderer (gl:GL, assets:AssetManager) =
         
     let resources: IDisposable[] =
         [|floorTexture; floorShaderProgram; floorVbo; floorVao
-          wallTexture; wallShaderProgram; wallVbo; wallVao|]
-        
+          wallTexture; wallShaderProgram; wallVbo; wallVao|] 
+    
     member _.Render(map:WordMap, camera:ICamera) =
         floorTexture.Bind(TextureUnit.Texture0)
         floorShaderProgram.Use()
@@ -122,12 +119,11 @@ type WorldRenderer (gl:GL, assets:AssetManager) =
                 }
                 wallShaderProgram.SetUniform("model", model.ViewMatrix)
                 gl.DrawArrays(GLEnum.Triangles, 0, 36u)
-        )
-        
-        // player
+        )                
+                
         let model = {
             Transform.Identity with
-                Position = map.Player |> to3D
+                Position = map.Player3
                 Rotation = Quaternion.CreateFromYawPitchRoll(MathH.radians 45f, MathH.radians 45f, MathH.radians 0f)
         }
         wallShaderProgram.SetUniform("model", model.ViewMatrix)

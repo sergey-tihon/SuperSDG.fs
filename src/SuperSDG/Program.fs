@@ -7,7 +7,6 @@ open Silk.NET.OpenGL
 open Silk.NET.Windowing
 open SuperSDG
 open SuperSDG.Engine
-open SuperSDG.MapGenerator
 
 let mutable options = WindowOptions.Default
 options.Size <- Vector2D<int>(1280, 720)
@@ -19,7 +18,7 @@ window.add_Load(fun _ ->
     let mutable map = MapGenerator.createMap 40 (DateTime.Now.Ticks |> int)
     let mutable camera =
         { FollowCamera.Default with
-            CameraTarget = MapRenderer.to3D map.Player
+            CameraTarget = map.Player3
             Distance = 15.0f
             Pitch = -45f
             Yaw = -60f
@@ -49,11 +48,10 @@ window.add_Load(fun _ ->
                     | Key.Right -> Right
                     | _ -> failwith "Impossible"
                 let directionVector =
-                    Mover.getDirection camera.Front direction
-                let player' = map.Player + directionVector
+                    MapGenerator.Mover.getDirection camera.Front direction
+                let player' = map.Player2 + directionVector
                 if map.Map[player'.X, player'.Y] = '.' then
-                    map <- { map with Player = player' }
-                    camera <- { camera with CameraTarget = MapRenderer.to3D map.Player }
+                    map <- { map with Player2 = player'}
             | _ -> ()
         )
 
@@ -90,6 +88,16 @@ window.add_Load(fun _ ->
     window.add_Render(fun deltaTime ->
         gl.Enable(EnableCap.DepthTest)
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
+
+
+        let targetPosition = map.Player2 |> MapGenerator.to3D
+        let direction = targetPosition - map.Player3
+        let distance = direction.Length()
+        if distance > 1e-5f then
+            let moveSpeed = float32(deltaTime) * camera.MovementSpeed
+            let newPosition = map.Player3 + Vector3.Normalize(direction) * (min distance moveSpeed)
+            camera <- { camera with CameraTarget = newPosition }
+            map <- { map with Player3 = newPosition }
 
         renderer.Render(map, camera) 
     )

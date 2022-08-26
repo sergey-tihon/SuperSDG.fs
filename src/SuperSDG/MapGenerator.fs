@@ -1,12 +1,19 @@
 module SuperSDG.MapGenerator
 
 open System
+open System.Numerics
 open Silk.NET.Maths
 
+let to3D(target:Vector2D<int>) =
+    Vector3(0.5f + float32(target.X), 0.5f, -float32(target.Y)-0.5f)
+    
 type WordMap = {
     Map: char[,]
-    Player: Vector2D<int>
-    Exit: Vector2D<int>
+    
+    Player2: Vector2D<int>
+    Exit2: Vector2D<int>
+    
+    Player3: Vector3
 }
 
 module Mover =
@@ -109,6 +116,7 @@ let createMap size seed =
     generateWalls map seed (size * size * 2 / 5)
     {
         Map = map
-        Player = Vector2D<int>(1, 1)
-        Exit = Vector2D<int>(size, size)
+        Exit2 = Vector2D<int>(size, size)
+        Player2 = Vector2D<int>(1, 1)
+        Player3 = to3D(Vector2D<int>(1, 1))
     }

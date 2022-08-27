@@ -104,6 +104,7 @@ window.add_Load(fun _ ->
         cubeShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
         cubeShader.SetUniform("lightColor", Vector3(1.0f, 1.0f, 1.0f))
         cubeShader.SetUniform("lightPos", lightPosition)
+        cubeShader.SetUniform("viewPos", camera.Position)
         cubeShader.SetUniform("view", icam.GetViewMatrix())
         cubeShader.SetUniform("projection", icam.GetProjectionMatrix())
         cubeShader.SetUniform("model", Matrix4x4.Identity)

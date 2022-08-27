@@ -73,13 +73,14 @@ window.add_Load(fun _ ->
     let lightShader = assets.LoadShaderProgram("light.vert", "light.frag")
     disposables.AddRange([cubeShader; lightShader])
     
-    let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, MapRenderer.Data.cubeVertices)
+    let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, MapRenderer.Data.cubeVerticesWithNorm)
    
     let vao = VertexArrayObject.Create(gl, vbo)
-    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
+    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 6u, 3)
     
     let lightVao = VertexArrayObject.Create(gl, vbo)
-    lightVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+    lightVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
 
     disposables.AddRange([vao; vbo; lightVao])
                             
@@ -94,7 +95,7 @@ window.add_Load(fun _ ->
             camera <- camera.ProcessKeyboard(CameraMovement.Right, float32 deltaTime)
     )                        
     window.add_Render(fun deltaTime ->
-        gl.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
         
@@ -102,6 +103,7 @@ window.add_Load(fun _ ->
         cubeShader.Use()
         cubeShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
         cubeShader.SetUniform("lightColor", Vector3(1.0f, 1.0f, 1.0f))
+        cubeShader.SetUniform("lightPos", lightPosition)
         cubeShader.SetUniform("view", icam.GetViewMatrix())
         cubeShader.SetUniform("projection", icam.GetProjectionMatrix())
         cubeShader.SetUniform("model", Matrix4x4.Identity)

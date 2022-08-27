@@ -26,10 +26,13 @@ window.add_Load(fun _ ->
 
     let mutable camera = {
         FreeCamera.Default with
-            Position = Vector3(0.0f, 0.0f,  3.0f)
+            Position = Vector3(1.1f, 2.3f, 4.0f)
+            Pitch = -30f
+            Yaw = 260f
             MouseSensitivity = 0.1f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)
     }
+    let lightPosition = Vector3(1.2f, 1.0f, 2.0f)
     
     let input = window.CreateInput()
     let primaryKeyboard = input.Keyboards.Item(0)
@@ -66,34 +69,19 @@ window.add_Load(fun _ ->
     gl.Enable(GLEnum.DepthTest)
     disposables.AddRange([input; gl])
     
-    let shaderProgram = assets.LoadShaderProgram("Shader.vert", "Shader.frag")
-    let texture1 = sharedAssets.LoadTexture "floor.jpeg"
-    let texture2 = sharedAssets.LoadTexture "wall.jpeg"
-    disposables.AddRange([shaderProgram; texture1; texture2])
+    let cubeShader = assets.LoadShaderProgram("cube.vert", "cube.frag")
+    let lightShader = assets.LoadShaderProgram("light.vert", "light.frag")
+    disposables.AddRange([cubeShader; lightShader])
     
-    let cubePositions = [|
-        Vector3( 0.0f,  0.0f,  0.0f);
-        Vector3( 2.0f,  5.0f, -15.0f);
-        Vector3(-1.5f, -2.2f, -2.5f);
-        Vector3(-3.8f, -2.0f, -12.3f);
-        Vector3( 2.4f, -0.4f, -3.5f);
-        Vector3(-1.7f,  3.0f, -7.5f);
-        Vector3( 1.3f, -2.0f, -2.5f);
-        Vector3( 1.5f,  2.0f, -2.5f);
-        Vector3( 1.5f,  0.2f, -1.5f);
-        Vector3(-1.3f,  1.0f, -1.5f)
-    |]
     let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, MapRenderer.Data.cubeVertices)
-    
+   
     let vao = VertexArrayObject.Create(gl, vbo)
     vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
-    vao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3)
-    //gl.EnableVertexAttribArray(2u);
-    disposables.AddRange([vao; vbo])
     
-    shaderProgram.Use()
-    shaderProgram.SetUniform("texture1", 0)
-    shaderProgram.SetUniform("texture2", 1)
+    let lightVao = VertexArrayObject.Create(gl, vbo)
+    lightVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
+
+    disposables.AddRange([vao; vbo; lightVao])
                             
     window.add_Update(fun deltaTime ->
         if primaryKeyboard.IsKeyPressed(Key.W) then
@@ -110,33 +98,29 @@ window.add_Load(fun _ ->
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
         
-        texture1.Bind(TextureUnit.Texture0)
-        texture2.Bind(TextureUnit.Texture1)
-        shaderProgram.Use()
-        
         let icam = camera :> ICamera
-        shaderProgram.SetUniform("view", icam.GetViewMatrix())
-        shaderProgram.SetUniform("projection", icam.GetProjectionMatrix())
+        cubeShader.Use()
+        cubeShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
+        cubeShader.SetUniform("lightColor", Vector3(1.0f, 1.0f, 1.0f))
+        cubeShader.SetUniform("view", icam.GetViewMatrix())
+        cubeShader.SetUniform("projection", icam.GetProjectionMatrix())
+        cubeShader.SetUniform("model", Matrix4x4.Identity)
+    
+        vao.Bind()
+        gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        
+        lightShader.Use()
+        lightShader.SetUniform("view", icam.GetViewMatrix())
+        lightShader.SetUniform("projection", icam.GetProjectionMatrix())
+        let model = {
+            Transform.Identity with
+                Position = lightPosition
+                Scale = 0.2f
+        }
+        lightShader.SetUniform("model", model.ViewMatrix)
         
         vao.Bind()
-        
-        cubePositions
-        |> Seq.iteri(fun i cubePos ->
-            let blend = Math.Sin(window.Time + float(i)) / 2.0 + 0.5
-            shaderProgram.SetUniform("blend", float32 blend)
-            
-            let angle = window.Time * 10. * float(i+1)
-            let model = {
-                Transform.Identity with
-                    Position = cubePos
-                    Rotation = Quaternion.CreateFromAxisAngle(
-                        Vector3(1.0f, 0.3f, 0.5f),
-                        MathH.radians(float32 angle))
-            }
-            shaderProgram.SetUniform("model", model.ViewMatrix)
-            gl.DrawArrays(GLEnum.Triangles, 0, 36u)
-        )
-        //gl.DrawElements(GLEnum.Triangles, 6u, GLEnum.UnsignedInt, IntPtr.Zero.ToPointer())
+        gl.DrawArrays(GLEnum.Triangles, 0, 36u)
     )
     
     window.add_Resize(fun size ->

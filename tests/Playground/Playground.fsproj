@@ -6,8 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Resources\Shader.vert" />
-        <EmbeddedResource Include="Resources\Shader.frag" />
+        <EmbeddedResource Include="Resources\cube.vert" />
+        <EmbeddedResource Include="Resources\cube.frag" />
+        <EmbeddedResource Include="Resources\light.vert" />
+        <EmbeddedResource Include="Resources\light.frag" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 

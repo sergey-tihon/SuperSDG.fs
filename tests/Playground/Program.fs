@@ -39,9 +39,6 @@ window.add_Load(fun _ ->
     
     let input = window.CreateInput()
     let primaryKeyboard = input.Keyboards.Item(0)
-    let isCameraControlMode() =
-        primaryKeyboard.IsKeyPressed(Key.ControlLeft)
-        || primaryKeyboard.IsKeyPressed(Key.ControlRight)
         
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
@@ -57,7 +54,7 @@ window.add_Load(fun _ ->
     let mutable lastMousePosition = None    
     for mice in input.Mice do
         mice.add_MouseMove(fun mouse position ->
-            if isCameraControlMode() then
+            if mouse.IsButtonPressed(MouseButton.Left) then
                 match lastMousePosition with
                 | None -> lastMousePosition <- Some position
                 | Some(lastPosition) ->
@@ -67,7 +64,7 @@ window.add_Load(fun _ ->
             else lastMousePosition <- None
         )
         mice.add_Scroll(fun mouse scrollWheel ->
-            if isCameraControlMode() then
+            if mouse.IsButtonPressed(MouseButton.Left) then
                 camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
     
@@ -142,12 +139,26 @@ window.add_Load(fun _ ->
         gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
+        
+        let lightColor = Vector3(
+            sin(window.Time * 2.0) |> float32,
+            sin(window.Time * 0.7) |> float32,
+            sin(window.Time * 1.3) |> float32)
+        let diffuseColor = lightColor * 0.5f
+        let ambientColor = diffuseColor * 0.2f
                 
         let icam = camera :> ICamera
         cubeShader.Use()
-        cubeShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
-        cubeShader.SetUniform("lightColor", Vector3(1.0f, 1.0f, 1.0f))
-        cubeShader.SetUniform("lightPos", lightPosition)
+        cubeShader.SetUniform("material.ambient", ambientColor)
+        cubeShader.SetUniform("material.diffuse", diffuseColor)
+        cubeShader.SetUniform("material.specular", Vector3(0.5f, 0.5f, 0.5f))
+        cubeShader.SetUniform("material.shininess", 32.0f)
+       
+        cubeShader.SetUniform("light.position", lightPosition)
+        cubeShader.SetUniform("light.ambient", Vector3(0.2f, 0.2f, 0.2f))
+        cubeShader.SetUniform("light.diffuse", Vector3(0.5f, 0.5f, 0.5f))
+        cubeShader.SetUniform("light.specular", Vector3(1.0f, 1.0f, 1.0f))
+        
         cubeShader.SetUniform("viewPos", camera.Position)
         cubeShader.SetUniform("view", icam.GetViewMatrix())
         cubeShader.SetUniform("projection", icam.GetProjectionMatrix())

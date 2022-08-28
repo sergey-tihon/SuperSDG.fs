@@ -26,11 +26,6 @@ window.add_Load(fun _ ->
         }
     
     let input = window.CreateInput()
-    let primaryKeyboard = input.Keyboards[0]
-    let isCameraControlMode() =
-        primaryKeyboard.IsKeyPressed(Key.ControlLeft)
-        || primaryKeyboard.IsKeyPressed(Key.ControlRight)
-        
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
             match key with 
@@ -59,7 +54,7 @@ window.add_Load(fun _ ->
     for mice in input.Mice do
         //mice.Cursor.CursorMode <- CursorMode.Raw
         mice.add_MouseMove(fun mouse position ->
-            if isCameraControlMode() then
+            if mouse.IsButtonPressed(MouseButton.Left) then
                 match lastMousePosition with
                 | None -> lastMousePosition <- Some position
                 | Some(lastPosition) ->
@@ -70,7 +65,7 @@ window.add_Load(fun _ ->
                 lastMousePosition <- None
         )
         mice.add_Scroll(fun mouse scrollWheel ->
-            if isCameraControlMode() then
+            if mouse.IsButtonPressed(MouseButton.Left) then
                 camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
 
@@ -88,7 +83,6 @@ window.add_Load(fun _ ->
     window.add_Render(fun deltaTime ->
         gl.Enable(EnableCap.DepthTest)
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
-
 
         let targetPosition = map.Player2 |> MapGenerator.to3D
         let direction = targetPosition - map.Player3

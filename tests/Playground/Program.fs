@@ -2,11 +2,13 @@
 open System.Numerics
 open System.Reflection
 open Silk.NET.Maths
+open Silk.NET.OpenGL.Extensions.ImGui
 open Silk.NET.Windowing
 open Silk.NET.Input
 open Silk.NET.OpenGL
 open SuperSDG
 open SuperSDG.Engine
+open ImGuiNET
 
 let mutable options = WindowOptions.Default
 options.Title <- "Playground"
@@ -26,16 +28,21 @@ window.add_Load(fun _ ->
 
     let mutable camera = {
         FreeCamera.Default with
-            Position = Vector3(1.1f, 2.3f, 4.0f)
-            Pitch = -30f
-            Yaw = 260f
+            Position = Vector3(-3f, -2.6f, 4.0f)
+            Pitch = 21f
+            Yaw = 320f
             MouseSensitivity = 0.1f
+            MovementSpeed = 5f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)
     }
     let lightPosition = Vector3(1.2f, 1.0f, 2.0f)
     
     let input = window.CreateInput()
     let primaryKeyboard = input.Keyboards.Item(0)
+    let isCameraControlMode() =
+        primaryKeyboard.IsKeyPressed(Key.ControlLeft)
+        || primaryKeyboard.IsKeyPressed(Key.ControlRight)
+        
     for keyboard in input.Keyboards do
         keyboard.add_KeyDown(fun keyboard key _ ->
             match key with 
@@ -50,24 +57,28 @@ window.add_Load(fun _ ->
     let mutable lastMousePosition = None    
     for mice in input.Mice do
         mice.add_MouseMove(fun mouse position ->
-            match lastMousePosition with
-            | None -> lastMousePosition <- Some position
-            | Some(lastPosition) ->
-                let delta = position - lastPosition
-                camera <- camera.ProcessMouseMovement(delta.X, delta.Y)
-                lastMousePosition <- Some(position)
+            if isCameraControlMode() then
+                match lastMousePosition with
+                | None -> lastMousePosition <- Some position
+                | Some(lastPosition) ->
+                    let delta = position - lastPosition
+                    camera <- camera.ProcessMouseMovement(delta.X, delta.Y)
+                    lastMousePosition <- Some(position)
+            else lastMousePosition <- None
         )
         mice.add_Scroll(fun mouse scrollWheel ->
-            camera <- camera.ProcessMouseScroll(scrollWheel.Y)
+            if isCameraControlMode() then
+                camera <- camera.ProcessMouseScroll(scrollWheel.Y)
         )
     
         
     let gl = GL.GetApi(window)
+    let imGuiController = new ImGuiController(gl, window, input)
     let sharedAssets = AssetManager(gl, typeof<AssetManager>.Assembly)
     let assets = AssetManager(gl, Assembly.GetExecutingAssembly())
 
     gl.Enable(GLEnum.DepthTest)
-    disposables.AddRange([input; gl])
+    disposables.AddRange([input; gl; imGuiController])
     
     let cubeShader = assets.LoadShaderProgram("cube.vert", "cube.frag")
     let lightShader = assets.LoadShaderProgram("light.vert", "light.frag")
@@ -83,6 +94,37 @@ window.add_Load(fun _ ->
     lightVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
 
     disposables.AddRange([vao; vbo; lightVao])
+    
+    let rec renderGui =
+        let mutable demoWindowVisible = false
+        
+        fun () ->
+            if demoWindowVisible then
+                ImGui.ShowDemoWindow()
+            
+            ImGui.Begin("App Info")  |> ignore
+            if ImGui.Button("Show Demo window") then
+                demoWindowVisible <- not demoWindowVisible
+            if ImGui.CollapsingHeader("Camera", ImGuiTreeNodeFlags.DefaultOpen) then
+                ImGui.Text($"Position = %A{camera.Position}");
+                ImGui.Text($"Pitch = {camera.Pitch}");
+                ImGui.Text($"Yaw = {camera.Yaw}")
+                ImGui.Text($"Zoom = {camera.Zoom}")
+                
+            if ImGui.CollapsingHeader("Window", ImGuiTreeNodeFlags.DefaultOpen) then
+                ImGui.Text($"FPS = %A{window.FramesPerSecond}")
+                ImGui.Text($"UPS = %A{window.UpdatesPerSecond}")
+                ImGui.Text($"Size = %A{window.Size}")
+                ImGui.Text($"VideoMode.Resolution = %A{window.VideoMode.Resolution}")
+                ImGui.Text($"VideoMode.RefreshRate = %A{window.VideoMode.RefreshRate}")
+                ImGui.Text($"API = %A{window.API.API}")
+                ImGui.Text($"API.Profile = %A{window.API.Profile}")
+                ImGui.Text($"API.Version = {window.API.Version.MajorVersion}.{window.API.Version.MinorVersion}")
+                ImGui.Text($"Monitor = %A{window.Monitor.Name}")
+                ImGui.Text($"VSync = %A{window.VSync}")
+
+            ImGui.End()
+            imGuiController.Render()
                             
     window.add_Update(fun deltaTime ->
         if primaryKeyboard.IsKeyPressed(Key.W) then
@@ -95,10 +137,12 @@ window.add_Load(fun _ ->
             camera <- camera.ProcessKeyboard(CameraMovement.Right, float32 deltaTime)
     )                        
     window.add_Render(fun deltaTime ->
+        imGuiController.Update(float32 deltaTime)
+
         gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
-        
+                
         let icam = camera :> ICamera
         cubeShader.Use()
         cubeShader.SetUniform("objectColor", Vector3(1.0f, 0.5f, 0.31f))
@@ -124,6 +168,7 @@ window.add_Load(fun _ ->
         
         vao.Bind()
         gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        renderGui()
     )
     
     window.add_Resize(fun size ->

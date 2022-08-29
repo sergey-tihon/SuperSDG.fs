@@ -79,16 +79,19 @@ window.add_Load(fun _ ->
     
     let cubeShader = assets.LoadShaderProgram("cube.vert", "cube.frag")
     let lightShader = assets.LoadShaderProgram("light.vert", "light.frag")
-    disposables.AddRange([cubeShader; lightShader])
+    let containerTexture = assets.LoadTexture "container2.png"
+    let containerSpecularTexture = assets.LoadTexture "container2_specular.png"
+    disposables.AddRange([cubeShader; lightShader; containerTexture; containerSpecularTexture])
     
     let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, MapRenderer.Data.cubeVerticesWithNorm)
    
     let vao = VertexArrayObject.Create(gl, vbo)
-    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
-    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 6u, 3)
+    vao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
+    vao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
+    vao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6)
     
     let lightVao = VertexArrayObject.Create(gl, vbo)
-    lightVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 6u, 0)
+    lightVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
 
     disposables.AddRange([vao; vbo; lightVao])
     
@@ -139,19 +142,13 @@ window.add_Load(fun _ ->
         gl.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         gl.Clear(ClearBufferMask.ColorBufferBit ||| ClearBufferMask.DepthBufferBit)
         //gl.PolygonMode(GLEnum.FrontAndBack, GLEnum.Line)
-        
-        let lightColor = Vector3(
-            sin(window.Time * 2.0) |> float32,
-            sin(window.Time * 0.7) |> float32,
-            sin(window.Time * 1.3) |> float32)
-        let diffuseColor = lightColor * 0.5f
-        let ambientColor = diffuseColor * 0.2f
                 
         let icam = camera :> ICamera
         cubeShader.Use()
-        cubeShader.SetUniform("material.ambient", ambientColor)
-        cubeShader.SetUniform("material.diffuse", diffuseColor)
-        cubeShader.SetUniform("material.specular", Vector3(0.5f, 0.5f, 0.5f))
+        cubeShader.SetUniform("material.diffuse", 0)
+        containerTexture.Bind(TextureUnit.Texture0)
+        cubeShader.SetUniform("material.specular", 1)
+        containerSpecularTexture.Bind(TextureUnit.Texture1)
         cubeShader.SetUniform("material.shininess", 32.0f)
        
         cubeShader.SetUniform("light.position", lightPosition)

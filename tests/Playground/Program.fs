@@ -106,6 +106,12 @@ window.add_Load(fun _ ->
         Vector3( 1.5f,  2.0f, -2.5f)
         Vector3( 1.5f,  0.2f, -1.5f)
         Vector3(-1.3f,  1.0f, -1.5f)
+    |]
+    let pointLightPositions = [|
+        Vector3( 0.7f,  0.2f,  2.0f)
+        Vector3( 2.3f, -3.3f, -4.0f)
+        Vector3(-4.0f,  2.0f, -12.0f)
+        Vector3( 0.0f,  0.0f, -3.0f)
     |]  
     
     let rec renderGui =
@@ -164,21 +170,39 @@ window.add_Load(fun _ ->
         containerSpecularTexture.Bind(TextureUnit.Texture1)
         cubeShader.SetUniform("material.shininess", 32.0f)
        
-        cubeShader.SetUniform("light.position", camera.Position)
-        cubeShader.SetUniform("light.direction", camera.Front)
-        cubeShader.SetUniform("light.cutOff", cos(MathH.radians 12.5f))
-        cubeShader.SetUniform("light.outerCutOff", cos(MathH.radians 17.5f))
-        cubeShader.SetUniform("light.ambient", Vector3(0.2f, 0.2f, 0.2f))
-        cubeShader.SetUniform("light.diffuse", Vector3(0.5f, 0.5f, 0.5f))
-        cubeShader.SetUniform("light.specular", Vector3(1.0f, 1.0f, 1.0f))
-        cubeShader.SetUniform("light.constant", 1.0f)
-        cubeShader.SetUniform("light.linear", 0.09f)
-        cubeShader.SetUniform("light.quadratic", 0.032f)
+        // directional light
+        cubeShader.SetUniform("dirLight.direction", Vector3(-0.2f, -1.0f, -0.3f))
+        cubeShader.SetUniform("dirLight.ambient", Vector3(0.05f, 0.05f, 0.05f))
+        cubeShader.SetUniform("dirLight.diffuse", Vector3(0.4f, 0.4f, 0.4f))
+        cubeShader.SetUniform("dirLight.specular", Vector3(0.5f, 0.5f, 0.5f))
+        
+        // point lights
+        pointLightPositions |> Array.iteri (fun i pos ->
+            let lightName = $"pointLights[{i}]"
+            cubeShader.SetUniform($"{lightName}.position", pos)
+            cubeShader.SetUniform($"{lightName}.ambient", Vector3(0.05f, 0.05f, 0.05f))
+            cubeShader.SetUniform($"{lightName}.diffuse", Vector3(0.8f, 0.8f, 0.8f))
+            cubeShader.SetUniform($"{lightName}.specular", Vector3(1.0f, 1.0f, 1.0f))
+            cubeShader.SetUniform($"{lightName}.constant", 1.0f)
+            cubeShader.SetUniform($"{lightName}.linear", 0.09f)
+            cubeShader.SetUniform($"{lightName}.quadratic", 0.032f)
+        )
+        
+        // spotLight
+        cubeShader.SetUniform("spotLight.position", camera.Position)
+        cubeShader.SetUniform("spotLight.direction", camera.Front)
+        cubeShader.SetUniform("spotLight.ambient", Vector3(0.0f, 0.0f, 0.0f))
+        cubeShader.SetUniform("spotLight.diffuse", Vector3(1.0f, 1.0f, 1.0f))
+        cubeShader.SetUniform("spotLight.specular", Vector3(1.0f, 1.0f, 1.0f))
+        cubeShader.SetUniform("spotLight.constant", 1.0f)
+        cubeShader.SetUniform("spotLight.linear", 0.09f)
+        cubeShader.SetUniform("spotLight.quadratic", 0.032f)
+        cubeShader.SetUniform("spotLight.cutOff", cos(MathH.radians(12.5f)))
+        cubeShader.SetUniform("spotLight.outerCutOff", cos(MathH.radians(15.0f)))
         
         cubeShader.SetUniform("viewPos", camera.Position)
         cubeShader.SetUniform("view", icam.GetViewMatrix())
         cubeShader.SetUniform("projection", icam.GetProjectionMatrix())
-        
         
         vao.Bind()
         cubePositions |> Array.iteri (fun i position ->
@@ -194,15 +218,18 @@ window.add_Load(fun _ ->
         lightShader.Use()
         lightShader.SetUniform("view", icam.GetViewMatrix())
         lightShader.SetUniform("projection", icam.GetProjectionMatrix())
-        let model = {
-            Transform.Identity with
-                Position = lightPosition
-                Scale = 0.2f
-        }
-        lightShader.SetUniform("model", model.ViewMatrix)
         
         vao.Bind()
-        gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        pointLightPositions |> Seq.iter (fun position ->
+            let model = {
+                Transform.Identity with
+                    Position = position
+                    Scale = 0.2f
+            }
+            lightShader.SetUniform("model", model.ViewMatrix)
+            gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        )
+        
         renderGui()
     )
     

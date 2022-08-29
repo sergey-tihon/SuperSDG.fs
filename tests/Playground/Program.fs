@@ -95,6 +95,19 @@ window.add_Load(fun _ ->
 
     disposables.AddRange([vao; vbo; lightVao])
     
+    let cubePositions = [|
+        Vector3( 0.0f,  0.0f,  0.0f)
+        Vector3( 2.0f,  5.0f, -15.0f)
+        Vector3(-1.5f, -2.2f, -2.5f)
+        Vector3(-3.8f, -2.0f, -12.3f)
+        Vector3( 2.4f, -0.4f, -3.5f)
+        Vector3(-1.7f,  3.0f, -7.5f)
+        Vector3( 1.3f, -2.0f, -2.5f)
+        Vector3( 1.5f,  2.0f, -2.5f)
+        Vector3( 1.5f,  0.2f, -1.5f)
+        Vector3(-1.3f,  1.0f, -1.5f)
+    |]  
+    
     let rec renderGui =
         let mutable demoWindowVisible = false
         
@@ -151,18 +164,32 @@ window.add_Load(fun _ ->
         containerSpecularTexture.Bind(TextureUnit.Texture1)
         cubeShader.SetUniform("material.shininess", 32.0f)
        
-        cubeShader.SetUniform("light.position", lightPosition)
+        cubeShader.SetUniform("light.position", camera.Position)
+        cubeShader.SetUniform("light.direction", camera.Front)
+        cubeShader.SetUniform("light.cutOff", cos(MathH.radians 12.5f))
+        cubeShader.SetUniform("light.outerCutOff", cos(MathH.radians 17.5f))
         cubeShader.SetUniform("light.ambient", Vector3(0.2f, 0.2f, 0.2f))
         cubeShader.SetUniform("light.diffuse", Vector3(0.5f, 0.5f, 0.5f))
         cubeShader.SetUniform("light.specular", Vector3(1.0f, 1.0f, 1.0f))
+        cubeShader.SetUniform("light.constant", 1.0f)
+        cubeShader.SetUniform("light.linear", 0.09f)
+        cubeShader.SetUniform("light.quadratic", 0.032f)
         
         cubeShader.SetUniform("viewPos", camera.Position)
         cubeShader.SetUniform("view", icam.GetViewMatrix())
         cubeShader.SetUniform("projection", icam.GetProjectionMatrix())
-        cubeShader.SetUniform("model", Matrix4x4.Identity)
-    
+        
+        
         vao.Bind()
-        gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        cubePositions |> Array.iteri (fun i position ->
+            let model = {
+                Transform.Identity with
+                    Position = position
+                    Rotation = Quaternion.CreateFromAxisAngle(Vector3(1.0f, 0.3f, 0.5f), float32 (i * 20))
+            }
+            cubeShader.SetUniform("model", model.ViewMatrix)
+            gl.DrawArrays(GLEnum.Triangles, 0, 36u)
+        )
         
         lightShader.Use()
         lightShader.SetUniform("view", icam.GetViewMatrix())

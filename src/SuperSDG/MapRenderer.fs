@@ -61,6 +61,14 @@ module Data =
         -0.5f;  0.5f; -0.5f;  0.0f; 1.0f
     |]
     
+    let floorVerticesWithNorm = [|
+        0.f;  0.f; 0.f;  0.0f; -1.0f;  0.0f;  0.0f; 1.0f;
+        1.f;  0.f; 0.f;  0.0f; -1.0f;  0.0f;  1.0f; 1.0f;
+        1.f;  0.f; 1.f;  0.0f; -1.0f;  0.0f;  1.0f; 0.0f;
+        1.f;  0.f; 1.f;  0.0f; -1.0f;  0.0f;  1.0f; 0.0f;
+        0.f;  0.f; 1.f;  0.0f; -1.0f;  0.0f;  0.0f; 0.0f;
+        0.f;  0.f; 0.f;  0.0f; -1.0f;  0.0f;  0.0f; 1.0f;
+    |]
     let cubeVerticesWithNorm = [|
         // positions          // normals           // texture coords
         -0.5f; -0.5f; -0.5f;  0.0f;  0.0f; -1.0f;  0.0f; 0.0f;
@@ -106,72 +114,138 @@ module Data =
         -0.5f;  0.5f; -0.5f;  0.0f;  1.0f;  0.0f;  0.0f; 1.0f
     |]
     
-type WorldRenderer (gl:GL, assets:AssetManager) =
-    let floorTexture = assets.LoadTexture "floor.jpeg"
-    let floorShaderProgram = assets.LoadShaderProgram("floor.vert", "floor.frag")
-    do  floorShaderProgram.Use()
-        floorShaderProgram.SetUniform("texture1", 0)
+type WorldRenderer (gl:GL, assets:AssetManager, initialMap:char[,]) =
     
-    let floorVbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, Data.floorVertices)    
-    let floorVao = VertexArrayObject.Create(gl, floorVbo)
-    do  floorVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
-        floorVao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3)
+    let lightsCount = 20
+    let loadUniforms (shader:Shader) =
+        shader.Use()
+        shader.SetUniform("material.diffuse", 0)
+        shader.SetUniform("material.specular", 1)
+        shader.SetUniform("material.shininess", 32.0f)
         
-    let wallTexture = assets.LoadTexture "wall.jpeg"
-    let wallShaderProgram = assets.LoadShaderProgram("wall.vert", "wall.frag")
-    do  wallShaderProgram.Use()
-        wallShaderProgram.SetUniform("texture1", 0)
+        // directional light
+        shader.SetUniform("dirLight.direction", Vector3(-0.2f, -1.0f, -0.3f))
+        shader.SetUniform("dirLight.ambient", Vector3(0.05f, 0.05f, 0.05f))
+        shader.SetUniform("dirLight.diffuse", Vector3(0.4f, 0.4f, 0.4f))
+        shader.SetUniform("dirLight.specular", Vector3(0.5f, 0.5f, 0.5f))
+        
+        // point lights
+        [0..lightsCount-1] |> Seq.iter (fun i  ->
+            let lightName = $"pointLights[{i}]"
+            shader.SetUniform($"{lightName}.ambient", Vector3(0.05f, 0.05f, 0.05f))
+            shader.SetUniform($"{lightName}.diffuse", Vector3(0.8f, 0.8f, 0.8f))
+            shader.SetUniform($"{lightName}.specular", Vector3(1.0f, 1.0f, 1.0f))
+            shader.SetUniform($"{lightName}.constant", 1.0f)
+            shader.SetUniform($"{lightName}.linear", 0.09f)
+            shader.SetUniform($"{lightName}.quadratic", 0.032f)
+        )
+        
+        // spotLight
+        shader.SetUniform("spotLight.ambient", Vector3(0.0f, 0.0f, 0.0f))
+        shader.SetUniform("spotLight.diffuse", Vector3(1.0f, 1.0f, 1.0f))
+        shader.SetUniform("spotLight.specular", Vector3(1.0f, 1.0f, 1.0f))
+        shader.SetUniform("spotLight.constant", 1.0f)
+        shader.SetUniform("spotLight.linear", 0.09f)
+        shader.SetUniform("spotLight.quadratic", 0.032f)
+        shader.SetUniform("spotLight.cutOff", cos(MathH.radians(8.5f)))
+        shader.SetUniform("spotLight.outerCutOff", cos(MathH.radians(12.5f)))
     
-    let wallVbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, Data.cubeVertices)   
+    let floorTexture = assets.LoadTexture "floor.jpeg"
+    let floorShader = assets.LoadShaderProgram("floor.vert", "container.frag")
+    do  loadUniforms floorShader
+    
+    let floorVbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, Data.floorVerticesWithNorm)    
+    let floorVao = VertexArrayObject.Create(gl, floorVbo)
+    do  floorVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
+        floorVao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
+        floorVao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6) 
+        
+    let containerTexture = assets.LoadTexture "container.png"
+    let containerSpecularTexture = assets.LoadTexture "container_specular.png"
+    let containerShader = assets.LoadShaderProgram("container.vert", "container.frag")
+    do  loadUniforms containerShader
+    
+    let wallVbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, Data.cubeVerticesWithNorm)   
     let wallVao = VertexArrayObject.Create(gl, wallVbo)
-    do  wallVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 5u, 0)
-        wallVao.VertexAttributePointer(1u, 2, VertexAttribPointerType.Float, 5u, 3) 
+    do  wallVao.VertexAttributePointer(0u, 3, VertexAttribPointerType.Float, 8u, 0)
+        wallVao.VertexAttributePointer(1u, 3, VertexAttribPointerType.Float, 8u, 3)
+        wallVao.VertexAttributePointer(2u, 2, VertexAttribPointerType.Float, 8u, 6) 
         
     let resources: IDisposable[] =
-        [|floorTexture; floorShaderProgram; floorVbo; floorVao
-          wallTexture; wallShaderProgram; wallVbo; wallVao|] 
-    
-    member _.Render(map:WordMap, camera:ICamera) =
-        floorTexture.Bind(TextureUnit.Texture0)
-        floorShaderProgram.Use()
+        [|floorTexture; floorShader; floorVbo; floorVao
+          containerTexture; containerSpecularTexture; containerShader; wallVbo; wallVao|]
         
-        floorShaderProgram.SetUniform("view", camera.GetViewMatrix())
+    let rnd = Random()
+    let walls =
+        initialMap
+        |> Array2D.mapi(fun x y c ->
+            if c = '#' then
+                let model = {
+                    Transform.Identity with
+                        Position = Vector2D(x, y) |> to3D
+                        Rotation =
+                            Quaternion.CreateFromYawPitchRoll(
+                                MathH.radians(90.f * float32(rnd.Next(0, 4))),
+                                0.f, 0.f
+                            )
+                }
+                Some <| model.ViewMatrix
+            else None)
+    let lights =
+        [0..lightsCount-1]
+        |> List.map (fun _ ->
+            Vector2D(
+                rnd.Next(0, initialMap.GetLength(0)),
+                rnd.Next(0, initialMap.GetLength(1))
+            ))
+        |> List.map (fun pos -> (to3D pos) + Vector3(0.f, 1f * float32(rnd.Next(2,7)), 0.f))
+            
+            
+    member _.Render(map:WordMap, camera:FollowCamera) =
+        let icam = camera :> ICamera
+        let bindViewAndLight (shader:Shader) =
+            shader.Use()
+        
+            shader.SetUniform("spotLight.position", camera.CameraPosition)
+            shader.SetUniform("spotLight.direction", camera.Front)
+            shader.SetUniform("view", icam.GetViewMatrix())
+            shader.SetUniform("projection", icam.GetProjectionMatrix())
+            
+            lights |> Seq.iteri (fun ind position ->
+                shader.SetUniform($"pointLights[{ind}].position", position)
+            )
+        
+        floorTexture.Bind(TextureUnit.Texture0)
+        containerSpecularTexture.Bind(TextureUnit.Texture1)
+        bindViewAndLight floorShader
         let model = {
             Transform.Identity with
                 Scale = float32 <| map.Map.GetLength(0)
                 Rotation = Quaternion.CreateFromAxisAngle(Vector3.UnitX, MathH.radians 180f)
         }
-        floorShaderProgram.SetUniform("model", model.ViewMatrix)
-        floorShaderProgram.SetUniform("projection", camera.GetProjectionMatrix())
-        
+        containerShader.SetUniform("model", model.ViewMatrix)
         floorVao.Bind()
         gl.DrawArrays(GLEnum.Triangles, 0, 6u)
         
-        wallTexture.Bind(TextureUnit.Texture0)
-        wallShaderProgram.Use()
-        
-        floorShaderProgram.SetUniform("view", camera.GetViewMatrix())
-        floorShaderProgram.SetUniform("projection", camera.GetProjectionMatrix())
+        containerTexture.Bind(TextureUnit.Texture0)
+        containerSpecularTexture.Bind(TextureUnit.Texture1)
+        bindViewAndLight containerShader
         
         wallVao.Bind()
-        
-        map.Map
-        |>Array2D.iteri(fun x y c ->
-            if c = '#' then
-                let model = {
-                    Transform.Identity with
-                        Position = Vector2D(x, y) |> to3D
-                }
-                wallShaderProgram.SetUniform("model", model.ViewMatrix)
+        walls
+        |>Array2D.iter(function
+            | Some model ->
+                containerShader.SetUniform("model", model)
                 gl.DrawArrays(GLEnum.Triangles, 0, 36u)
-        )                
+            | _ -> ()
+        )
                 
         let model = {
             Transform.Identity with
                 Position = map.Player3
                 Rotation = Quaternion.CreateFromYawPitchRoll(MathH.radians 45f, MathH.radians 45f, MathH.radians 0f)
         }
-        wallShaderProgram.SetUniform("model", model.ViewMatrix)
+        containerShader.SetUniform("model", model.ViewMatrix)
         gl.DrawArrays(GLEnum.Triangles, 0, 36u)
 
         

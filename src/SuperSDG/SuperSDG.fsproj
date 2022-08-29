@@ -8,11 +8,12 @@
 
     <ItemGroup>
         <EmbeddedResource Include="Resources\floor.jpeg" />
-        <EmbeddedResource Include="Resources\floor.frag" />
         <EmbeddedResource Include="Resources\floor.vert" />
         <EmbeddedResource Include="Resources\wall.jpeg" />
-        <EmbeddedResource Include="Resources\wall.vert" />
-        <EmbeddedResource Include="Resources\wall.frag" />
+        <EmbeddedResource Include="Resources\container.png" />
+        <EmbeddedResource Include="Resources\container_specular.png" />
+        <EmbeddedResource Include="Resources\container.vert" />
+        <EmbeddedResource Include="Resources\container.frag" />
         <Compile Include="AssetManager.fs" />
         <Compile Include="MapGenerator.fs" />
         <Compile Include="MapRenderer.fs" />

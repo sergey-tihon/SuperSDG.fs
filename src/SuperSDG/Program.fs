@@ -19,7 +19,7 @@ window.add_Load(fun _ ->
     let mutable camera =
         { FollowCamera.Default with
             CameraTarget = map.Player3
-            Distance = 15.0f
+            Distance = 20.0f
             Pitch = -89f
             Yaw = -0f
             AspectRatio = float32(window.Size.X) / float32(window.Size.Y)
@@ -77,7 +77,7 @@ window.add_Load(fun _ ->
     let disposables = Collections.Generic.List<IDisposable>()
     disposables.AddRange([input; gl])
 
-    let renderer = new MapRenderer.WorldRenderer(gl, assets)
+    let renderer = new MapRenderer.WorldRenderer(gl, assets, map.Map)
     disposables.AddRange([renderer])
 
     window.add_Render(fun deltaTime ->

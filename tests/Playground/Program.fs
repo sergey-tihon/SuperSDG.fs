@@ -79,8 +79,8 @@ window.add_Load(fun _ ->
     
     let cubeShader = assets.LoadShaderProgram("cube.vert", "cube.frag")
     let lightShader = assets.LoadShaderProgram("light.vert", "light.frag")
-    let containerTexture = assets.LoadTexture "container2.png"
-    let containerSpecularTexture = assets.LoadTexture "container2_specular.png"
+    let containerTexture = sharedAssets.LoadTexture "container.png"
+    let containerSpecularTexture = sharedAssets.LoadTexture "container_specular.png"
     disposables.AddRange([cubeShader; lightShader; containerTexture; containerSpecularTexture])
     
     let vbo = BufferObject.Create(gl, BufferTargetARB.ArrayBuffer, MapRenderer.Data.cubeVerticesWithNorm)
